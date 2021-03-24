@@ -1,1 +1,0 @@
-dd if=/dev/zero of=1MB.dat bs=1M count=1

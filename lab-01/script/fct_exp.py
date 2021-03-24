@@ -12,8 +12,11 @@ class MyTopo(Topo):
         self.addLink(
             h1,
             h2,
-            bw=10,          # bw (Mbps): 10, 50, 100, 500, 1000
-            delay='10ms')   # delay: '10ms', '100ms'
+            # 10, 50, 100, 500, 1000
+            bw=1000,
+            # 10, 100
+            delay='100ms'
+        )
 
 
 topo = MyTopo()

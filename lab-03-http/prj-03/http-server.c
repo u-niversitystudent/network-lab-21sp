@@ -17,12 +17,12 @@ int main(int argc, const char *argv[]) {
   }
   printf("Socket created\n");
 
-  //   ! set reuseaddr [might be useful in other projects]
-  //   int yes = 1;
-  //   if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0) {
-  //     perror("Setsockopt error: ");
-  //     return -1;
-  //   }
+  // set reuseaddr [might be useful in other projects]
+  int yes = 1;
+  if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0) {
+    perror("Setsockopt error: ");
+    return -1;
+  }
 
   // Bind socket fd with monitor address
   server.sin_family = AF_INET;

@@ -1,27 +1,29 @@
 #ifndef __BASE_H__
 #define __BASE_H__
 
-#include "types.h"
 #include "ether.h"
 #include "list.h"
+#include "types.h"
 
 #include <arpa/inet.h>
 
-typedef struct {
-	struct list_head iface_list;
-	int nifs;
-	struct pollfd *fds;
+typedef struct
+{
+    struct list_head iface_list;
+    int nifs;
+    struct pollfd *fds;
 } ustack_t;
 
 extern ustack_t *instance;
 
-typedef struct {
-	struct list_head list;
+typedef struct
+{
+    struct list_head list;
 
-	int fd;
-	int index;
-	u8	mac[ETH_ALEN];
-	char name[16];
+    int fd;
+    int index;
+    u8 mac[ETH_ALEN];
+    char name[16];
 } iface_info_t;
 
 void init_ustack();

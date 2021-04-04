@@ -5,6 +5,10 @@ extern ustack_t *instance;
 
 void broadcast_packet(iface_info_t *iface, const char *packet, int len)
 {
-	// TODO: broadcast packet 
-	fprintf(stdout, "TODO: broadcast packet.\n");
+    // TODO: broadcast packet
+    fprintf(stdout, "TODO: broadcast packet.\n");
+    while (!list_empty(iface->list))
+    {
+        ;
+    }
 }

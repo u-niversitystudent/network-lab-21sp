@@ -13,6 +13,7 @@ void broadcast_packet(iface_info_t *iface, const char *packet, int len)
         if (iface_node != iface)
         {
             iface_send_packet(iface_node, packet, len);
+            // printf("Send to %s!\n", iface_node->name);
         }
     }
 }

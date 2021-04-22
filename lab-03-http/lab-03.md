@@ -371,15 +371,15 @@ echo "process finished"
 
 #### 客户端 `my client` 与服务器 `my server`
 
-<img src="lab-02.assets/image-20210401225122516.png" alt="image-20210401225122516" style="zoom:50%;" />
+<img src="lab-03.assets/image-20210401225122516.png" alt="image-20210401225122516" style="zoom:50%;" />
 
 #### 客户端 `wget` 命令与服务器 `my server`
 
-<img src="lab-02.assets/image-20210401225358421.png" alt="image-20210401225358421" style="zoom:33%;" />
+<img src="lab-03.assets/image-20210401225358421.png" alt="image-20210401225358421" style="zoom:33%;" />
 
 #### 客户端 `my client` 与服务器 `python -m SimpleHTTPServer`
 
-<img src="lab-02.assets/image-20210401230009372.png" alt="image-20210401230009372" style="zoom:33%;" />
+<img src="lab-03.assets/image-20210401230009372.png" alt="image-20210401230009372" style="zoom:33%;" />
 
 #### 连续/混合发送请求
 
@@ -387,11 +387,11 @@ echo "process finished"
 
 1. 使用 `python` 的 `SimpleHTTPServer`, 交替使用 `my client` 和 `wget` 获取文件 (存在/不存在), 结果如下:
 
-<img src="lab-02.assets/image-20210401230323147.png" alt="image-20210401230323147" style="zoom:33%;" />
+<img src="lab-03.assets/image-20210401230323147.png" alt="image-20210401230323147" style="zoom:33%;" />
 
 2. 使用 `my server` , 交替使用 `my client` 和 `wget` 获取文件 (存在/不存在), 结果如下:
 
-<img src="lab-02.assets/image-20210401230754708.png" alt="image-20210401230754708" style="zoom:33%;" />
+<img src="lab-03.assets/image-20210401230754708.png" alt="image-20210401230754708" style="zoom:33%;" />
 
 ### 实验结论
 

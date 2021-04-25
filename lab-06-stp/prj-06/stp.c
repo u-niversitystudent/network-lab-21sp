@@ -57,6 +57,9 @@ static void stp_port_send_packet(stp_port_t *p, void *stp_msg, int msg_len) {
   memcpy(pkt + ETHER_HDR_SIZE + LLC_HDR_SIZE, stp_msg, msg_len);
 
   iface_send_packet(p->iface, pkt, pkt_len);
+  // Fixed: lack of free() may cause risk of
+  //        memory leaking, caught by Ding Qiang
+  free(pkt);
 }
 
 static void stp_port_send_config(stp_port_t *p) {

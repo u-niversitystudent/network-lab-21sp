@@ -1,5 +1,4 @@
 *.code-workspace
 .vscode/
 temp*
-sum*
 lab-07*

@@ -31,7 +31,7 @@ def cwnd_monitor(net, fname):
             p = h1.popen(cmd, shell=True, stdout=PIPE)
             output = p.stdout.read()
             if output != '':
-                ofile.write('%f, %s' % (t, output))
+                ofile.write('ts:%f, %s' % (t, output))
             sleep(0.01)
 
 def start_cwnd_monitor(net, fname):
@@ -55,7 +55,7 @@ def qlen_monitor(net, fname):
             output = p.stdout.read()
             matches = pat.findall(output)
             if matches and len(matches) > 1:
-                ofile.write('%f, %s\n' % (t, matches[1]))
+                ofile.write('ts:%f, qlen:%s\n' % (t, matches[1]))
             sleep(0.01)
 
 def start_qlen_monitor(net, fname):
@@ -77,8 +77,9 @@ def rtt_monitor(net, fname):
             p = h1.popen(cmd, shell=True, stdout=PIPE)
             output = p.stdout.read()
             if output != '':
-                ofile.write('%f, %s' % (t, output))
-            sleep(0.1)
+                ofile.write('ts:%f, %s' % (t, output))
+            #! edit, origin=0.1
+            sleep(0.2)
 
 def start_rtt_monitor(net, fname):
     print 'Start rtt monitor ...'
@@ -94,7 +95,14 @@ def start_iperf(net, duration):
     h1, h2 = net.get('h1', 'h2')
     print 'Start iperf ...'
     server = h2.popen('iperf -s -w 16m')
-    client = h1.popen('iperf -c %s -t %d' % (h2.IP(), duration+ 5))
+    #!edit
+    # origin:
+    # client = h1.popen('iperf -c %s -t %d' % (h2.IP(), duration+ 5))
+    # update by q&a doc:
+    # h1.cmd('iperf -c %s -t %d -i 0.1 | tee iperf_result.txt &' % (h2.IP(), duration+ 5))
+    # raise by Zhang Xiangyu:
+    h1.cmd('iperf -c %s -t %d -i 0.1 > iperf_result.txt' % (h2.IP(), duration+ 5))
+    # iperf -c %s -t %d -i 0.1 > test.log
 
 def stop_iperf():
     print 'Kill iperf ...'
@@ -120,7 +128,7 @@ def dynamic_bw(net, tot_time):
     start_time = time()
     bandwidth = [100,10,1,50,1,100]
     count = 1
-    while True:                                              
+    while True:
         sleep(tot_time/6)
         now = time()
         delta = now - start_time

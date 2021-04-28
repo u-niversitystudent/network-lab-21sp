@@ -1,0 +1,6 @@
+.ipynb_checkpoints*
+qlen-*
+algo-*
+*.txt
+*.pyc
+*fig*/

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from mininet.topo import Topo
-from mininet.node import Host 
+from mininet.node import Host
 from mininet.link import TCLink
 from mininet.net import Mininet
 from mininet.cli import CLI
@@ -27,7 +27,7 @@ class BBTopo(Topo):
 def mitigate_bufferbloat(net, duration=60):
     set_qdisc_algo(net, args.algo)
 
-    dname = args.algo
+    dname = "algo-" + args.algo
     if not os.path.exists(dname):
         os.makedirs(dname)
 

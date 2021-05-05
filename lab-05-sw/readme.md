@@ -229,7 +229,7 @@ void handle_packet(iface_info_t *iface, char *packet, int len) {
 图 2 左为 `h1` 向 `h2` 发包时的命令行输出, 右为 `h1` 向 `h3` 发包时的命令行输出:
 
 <figure style="text-align:center">
-    <img src="lab-05.assets/h1h1-toh2h3.png" alt="h1-fromh2h3" style="zoom:25%;" />
+    <img src="readme.assets/h1h1-toh2h3.png" alt="h1-fromh2h3" style="zoom:25%;" />
     <figcaption style="font-size:9pt">
         图 2 &nbsp;&nbsp; iperf 测量结果 (Client 端)
     </figcaption>
@@ -238,7 +238,7 @@ void handle_packet(iface_info_t *iface, char *packet, int len) {
 图 3 上为 `h3` 收包时的命令行输出, 下为 `h2` 收包时的命令行输出:
 
 <figure style="text-align:center">
-    <img src="lab-05.assets/h2h3-fromh1h1.png" alt="h2h3-fromh1h1" style="zoom:25%;" />
+    <img src="readme.assets/h2h3-fromh1h1.png" alt="h2h3-fromh1h1" style="zoom:25%;" />
     <figcaption style="font-size:9pt">
         图 3 &nbsp;&nbsp; iperf 测量结果 (Server 端)
     </figcaption>
@@ -251,7 +251,7 @@ void handle_packet(iface_info_t *iface, char *packet, int len) {
 图 4 左为 `h2` 向 `h1` 发包时的命令行输出, 右为 `h3` 向 `h1` 发包时的命令行输出:
 
 <figure style="text-align:center">
-    <img src="lab-05.assets/h2h3-toh1.png" alt="h2h3-toh1" style="zoom:25%;" />
+    <img src="readme.assets/h2h3-toh1.png" alt="h2h3-toh1" style="zoom:25%;" />
     <figcaption style="font-size:9pt">
         图 4 &nbsp;&nbsp; iperf 测量结果 2 (Client 端)
     </figcaption>
@@ -260,7 +260,7 @@ void handle_packet(iface_info_t *iface, char *packet, int len) {
 图 5 为 `h1` 收包时的命令行输出:
 
 <figure style="text-align:center">
-    <img src="lab-05.assets/h1-fromh2h3.png" alt="h1-fromh2h3" style="zoom:25%;" />
+    <img src="readme.assets/h1-fromh2h3.png" alt="h1-fromh2h3" style="zoom:25%;" />
     <figcaption style="font-size:9pt">
         图 5 &nbsp;&nbsp; iperf 测量结果 2 (Server 端)
     </figcaption>
@@ -331,7 +331,7 @@ void handle_packet(iface_info_t *iface, char *packet, int len) {
    使用交换机的网络, 链路利用效率远远高于使用集线器的网络, 且基本能达到 "h1 为 Server, h2 和 h3 为 Client" 情形下的链路利用效率, 也就是说, 传输带宽接近带宽上限.
 
 <figure style="text-align:center">
-    <img src="lab-05.assets/topo.png" alt="topo" style="zoom:55%;" />
+    <img src="readme.assets/topo.png" alt="topo" style="zoom:55%;" />
     <figcaption style="font-size:9pt">
         图 5 &nbsp;&nbsp; 网络拓扑示意图
     </figcaption>

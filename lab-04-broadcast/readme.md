@@ -37,7 +37,7 @@ void broadcast_packet(iface_info_t *iface, const char *packet, int len)
 `make` 编译得到 `hub` ; 使用 `three_nodes_bw.py` 搭建网络环境, 在节点 `b1` 上运行 `hub` 程序, 在节点 `h1`, `h2`, `h3` 上两两互相 `ping` 对方, 结果如下, 可知广播网络能正常运行:
 
 <figure style="text-align:center">
-    <img src="lab-04.assets/ping-each-other.png" alt="ping-each-other" style="zoom:25%;" />
+    <img src="readme.assets/ping-each-other.png" alt="ping-each-other" style="zoom:25%;" />
     <figcaption style="font-size:9pt">
         图 1 &nbsp;&nbsp; 广播网络运行验证结果
     </figcaption>
@@ -59,7 +59,7 @@ void broadcast_packet(iface_info_t *iface, const char *packet, int len)
 图 2 左为 `h1` 向 `h3` 发包时的命令行输出, 右为 `h1` 向 `h2` 发包时的命令行输出:
 
 <figure style="text-align:center">
-    <img src="lab-04.assets/1at1to2-1at1to3.png" alt="1at1to2-1at1to3" style="zoom:25%;" />
+    <img src="readme.assets/1at1to2-1at1to3.png" alt="1at1to2-1at1to3" style="zoom:25%;" />
     <figcaption style="font-size:9pt">
         图 2 &nbsp;&nbsp; iperf 测量结果 (Client 端)
     </figcaption>
@@ -68,7 +68,7 @@ void broadcast_packet(iface_info_t *iface, const char *packet, int len)
 图 3 上为 `h3` 收包时的命令行输出, 下为 `h2` 收包时的命令行输出:
 
 <figure style="text-align:center">
-    <img src="lab-04.assets/2at1to2-2at1to3.png" alt="2at1to2-2at1to3" style="zoom:25%;" />
+    <img src="readme.assets/2at1to2-2at1to3.png" alt="2at1to2-2at1to3" style="zoom:25%;" />
     <figcaption style="font-size:9pt">
         图 3 &nbsp;&nbsp; iperf 测量结果 (Server 端)
     </figcaption>
@@ -81,7 +81,7 @@ void broadcast_packet(iface_info_t *iface, const char *packet, int len)
 图 4 左为 `h2` 向 `h1` 发包时的命令行输出, 右为 `h3` 向 `h1` 发包时的命令行输出:
 
 <figure style="text-align:center">
-    <img src="lab-04.assets/2at2to1-3at3to1.png" alt="2at2to1-3at3to1" style="zoom:25%;" />
+    <img src="readme.assets/2at2to1-3at3to1.png" alt="2at2to1-3at3to1" style="zoom:25%;" />
     <figcaption style="font-size:9pt">
         图 4 &nbsp;&nbsp; iperf 测量结果 2 (Client 端)
     </figcaption>
@@ -90,7 +90,7 @@ void broadcast_packet(iface_info_t *iface, const char *packet, int len)
 图 5 为 `h1` 收包时的命令行输出:
 
 <figure style="text-align:center">
-    <img src="lab-04.assets/1at2to1-1at3to1.png" alt="1at2to1-1at3to1" style="zoom:25%;" />
+    <img src="readme.assets/1at2to1-1at3to1.png" alt="1at2to1-1at3to1" style="zoom:25%;" />
     <figcaption style="font-size:9pt">
         图 5 &nbsp;&nbsp; iperf 测量结果 2 (Server 端)
     </figcaption>
@@ -134,7 +134,7 @@ if __name__ == '__main__':
 该脚本构建的网络拓扑如下:
 
 <figure style="text-align:center">
-    <img src="lab-04.assets/loop-nodes-fig.png" alt="loop-nodes-fig" style="zoom:35%;" />
+    <img src="readme.assets/loop-nodes-fig.png" alt="loop-nodes-fig" style="zoom:35%;" />
     <figcaption style="font-size:9pt">
         图 6 &nbsp;&nbsp; 使用 loop_nodes_bw.py 脚本构建的网络拓扑示意图
     </figcaption>
@@ -151,7 +151,7 @@ if __name__ == '__main__':
 得到的抓包结果:
 
 <figure style="text-align:center">
-    <img src="lab-04.assets/normal-log.png" alt="normal-log" style="zoom:25%;" />
+    <img src="readme.assets/normal-log.png" alt="normal-log" style="zoom:25%;" />
     <figcaption style="font-size:9pt">
         图 7 &nbsp;&nbsp; 无环路的网络拓扑中的 ping 命令抓包结果
     </figcaption>
@@ -164,7 +164,7 @@ if __name__ == '__main__':
 3. 从 `h1` 节点用 `ping 10.0.0.2 -c 1` 向 `h2` 发包:
 
 <figure style="text-align:center">
-    <img src="lab-04.assets/ping-at-loop.png" alt="ping-at-loop" style="zoom:25%;" />
+    <img src="readme.assets/ping-at-loop.png" alt="ping-at-loop" style="zoom:25%;" />
     <figcaption style="font-size:9pt">
         图 8 &nbsp;&nbsp; 复现数据包环路的命令行输入
     </figcaption>
@@ -173,7 +173,7 @@ if __name__ == '__main__':
 得到的结果:
 
 <figure style="text-align:center">
-    <img src="lab-04.assets/loop-log.png" alt="loop-log" style="zoom:25%;" />
+    <img src="readme.assets/loop-log.png" alt="loop-log" style="zoom:25%;" />
     <figcaption style="font-size:9pt">
         图 9 &nbsp;&nbsp; 含环路的网络拓扑中的 ping 命令抓包结果
     </figcaption>

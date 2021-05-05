@@ -38,7 +38,7 @@
 #### QLEN (=Queue Length)
 
 <figure style="text-align:center">
-    <img src="lab-07.assets/rp-qlen.png" alt="rp-qlen" style="zoom:30%;" />
+    <img src="readme.assets/rp-qlen.png" alt="rp-qlen" style="zoom:30%;" />
     <figcaption style="font-size :9pt">
         图 1&nbsp;&nbsp;qlen 值随时间 (单位: s) 变化曲线图
     </figcaption>
@@ -59,7 +59,7 @@
 #### CWND
 
 <figure style="text-align:center">
-    <img src="lab-07.assets/rp-cwnd.png" alt="rp-cwnd" style="zoom:30%;" />
+    <img src="readme.assets/rp-cwnd.png" alt="rp-cwnd" style="zoom:30%;" />
     <figcaption style="font-size :9pt">
         图 2&nbsp;&nbsp;CWND 值随时间 (单位: s) 变化曲线图
     </figcaption>
@@ -80,7 +80,7 @@
 #### RTT
 
 <figure style="text-align:center">
-    <img src="lab-07.assets/rp-rtt.png" alt="rp-rtt" style="zoom:30%;" />
+    <img src="readme.assets/rp-rtt.png" alt="rp-rtt" style="zoom:30%;" />
     <figcaption style="font-size :9pt">
         图 3&nbsp;&nbsp;RTT 值 (单位: ms) 随时间 (单位: s) 变化曲线图
     </figcaption>
@@ -108,12 +108,12 @@ RTT 发生升降变化是因为收包/丢包情况有变化:
 下面的两张散点图 (图 4 和图 5) 展示了不同 maxq 值下 iperf 测试的带宽 (Bandwidth) 和传输数据大小 (Transfer) 记录:
 
 <figure style="text-align:center">
-    <img src="lab-07.assets/rp-iperf-bw.png" alt="rp-iperf-bw" style="zoom:10%;" />
+    <img src="readme.assets/rp-iperf-bw.png" alt="rp-iperf-bw" style="zoom:10%;" />
     <figcaption style="font-size :9pt">
         图 4&nbsp;&nbsp;iperf 测量中 Bandwidth 值 (单位: Mbps) 随时间 (单位: s) 变化曲线图
     </figcaption>
 	<br/>
-    <img src="lab-07.assets/rp-iperf-transfer.png" alt="rp-iperf-transfer" style="zoom:10%;" />
+    <img src="readme.assets/rp-iperf-transfer.png" alt="rp-iperf-transfer" style="zoom:10%;" />
     <figcaption style="font-size :9pt">
         图 5&nbsp;&nbsp;iperf 测量中 Transfer 值 (单位: KB) 随时间 (单位: s) 变化曲线图
     </figcaption>
@@ -126,7 +126,7 @@ RTT 发生升降变化是因为收包/丢包情况有变化:
 实际上, qlen, cwnd 和 rtt 三个量之间是互相影响的, 这种互相影响的本质就是 TCP 拥塞控制方法等机制. 他们之间的关系图如下:
 
 <figure style="text-align:center">
-    <img src="lab-07.assets/lab-07-relation-between-cwnd-qlen-rtt.png" alt="lab-07-relation-between-cwnd-qlen-rtt" style="zoom:30%;" />
+    <img src="readme.assets/lab-07-relation-between-cwnd-qlen-rtt.png" alt="lab-07-relation-between-cwnd-qlen-rtt" style="zoom:30%;" />
     <figcaption style="font-size :9pt">
         图 6&nbsp;&nbsp; qlen, cwnd 和 rtt 的关系示意图
     </figcaption>
@@ -150,7 +150,7 @@ RTT 发生升降变化是因为收包/丢包情况有变化:
 > | ~60s     | 100                   |
 
 <figure style="text-align:center">
-    <img src="lab-07.assets/mt-algos-rtt-fig.png" alt="mt-algos-rtt-fig" style="zoom:20%;" />
+    <img src="readme.assets/mt-algos-rtt-fig.png" alt="mt-algos-rtt-fig" style="zoom:20%;" />
     <figcaption style="font-size :9pt">
         图 7&nbsp;&nbsp;RTT 值 (单位: ms) 随时间 (单位: s) 变化曲线图
     </figcaption>
@@ -169,12 +169,12 @@ RTT 发生升降变化是因为收包/丢包情况有变化:
 下面的两张散点图 (图 8 和图 9) 展示了采用不同算法解决 bufferbloat 问题时 iperf 测试的带宽 (Bandwidth) 和传输数据大小 (Transfer) 记录:
 
 <figure style="text-align:center">
-    <img src="lab-07.assets/mt-iperf-bw.png" alt="mt-iperf-bw" style="zoom:10%;" />
+    <img src="readme.assets/mt-iperf-bw.png" alt="mt-iperf-bw" style="zoom:10%;" />
     <figcaption style="font-size :9pt">
         图 8&nbsp;&nbsp;iperf 测量中 Bandwidth 值 (单位: Mbps) 随时间 (单位: s) 变化曲线图
     </figcaption>
 	<br/>
-   <img src="lab-07.assets/mt-iperf-transfer.png" alt="mt-iperf-transfer" style="zoom:10%;" />
+   <img src="readme.assets/mt-iperf-transfer.png" alt="mt-iperf-transfer" style="zoom:10%;" />
     <figcaption style="font-size :9pt">
         图 9&nbsp;&nbsp;iperf 测量中 Transer 值 (单位: KB) 随时间 (单位: s) 变化曲线图
     </figcaption>
@@ -256,7 +256,7 @@ HPCC 通过硬件升级, 突破了传统拥塞控制中 "迭代式" 调整链路
 在复现解决 bufferbloat 问题的实验中, 有时候会遇到类似于下面这样的图, RTT 表现和预期相去甚远:
 
 <figure style="text-align:center">
-    <img src="lab-07.assets/mt-algos-bad-rtt.png" alt="mt-algos-bad-rtt" style="zoom:20%;" />
+    <img src="readme.assets/mt-algos-bad-rtt.png" alt="mt-algos-bad-rtt" style="zoom:20%;" />
     <figcaption style="font-size :9pt">
         图 10&nbsp;&nbsp;一张无规律可言的 RTT 值 (单位: ms) 随时间 (单位: s) 变化曲线图
     </figcaption>

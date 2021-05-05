@@ -180,12 +180,12 @@ void broadcast_packet(iface_info_t *iface, const char *packet, int len) {
 
 脚本 `four_node_ring.py` 对应的网络拓扑如下:
 
-<img src="lab-06.assets/stp-four.png" alt="stp-four" style="zoom:33%;" />
+<img src="readme.assets/stp-four.png" alt="stp-four" style="zoom:33%;" />
 
 运行该脚本进行测试, 得到结果如下:
 
 ```txt
-![stp-four-res](lab-06.assets/stp-four-res.png)NODE b1 dumps:
+![stp-four-res](readme.assets/stp-four-res.png)NODE b1 dumps:
 INFO: this switch is root.
 INFO: port id: 01, role: DESIGNATED.
 INFO: 	designated ->root: 0101, ->switch: 0101, ->port: 01, ->cost: 0.
@@ -216,7 +216,7 @@ INFO: 	designated ->root: 0101, ->switch: 0301, ->port: 02, ->cost: 1.
 
 据此可画出运行生成树算法之后的拓扑:
 
-<img src="lab-06.assets/stp-four-res.png" alt="stp-four-res" style="zoom:33%;" />
+<img src="readme.assets/stp-four-res.png" alt="stp-four-res" style="zoom:33%;" />
 
 可见算法在该拓扑上正确运行.
 
@@ -224,11 +224,11 @@ INFO: 	designated ->root: 0101, ->switch: 0301, ->port: 02, ->cost: 1.
 
 脚本 `new_topo.py` 对应的网络拓扑如下:
 
-<img src="lab-06.assets/stp-nine.png" alt="stp-nine" style="zoom:33%;" />
+<img src="readme.assets/stp-nine.png" alt="stp-nine" style="zoom:33%;" />
 
 运行该脚本进行测试, 根据输出, 画出运行生成树算法之后的拓扑:
 
-<img src="lab-06.assets/stp-nine-res.png" alt="stp-nine-res" style="zoom:33%;" />
+<img src="readme.assets/stp-nine-res.png" alt="stp-nine-res" style="zoom:33%;" />
 
 可见算法在该拓扑上正确运行.
 
@@ -236,17 +236,17 @@ INFO: 	designated ->root: 0101, ->switch: 0301, ->port: 02, ->cost: 1.
 
 以脚本 `four_node_ring.py` 为基础编写了脚本 `six_node.py` , 它在 b1 ~ b4 上运行 stp 程序; 对应的网络拓扑如下:
 
-<img src="lab-06.assets/stp-six.png" alt="stp-six" style="zoom:33%;" />
+<img src="readme.assets/stp-six.png" alt="stp-six" style="zoom:33%;" />
 
 运行脚本, 等待一定时间, 然后尝试在 h1 和 h2 上互相发出 ping 命令, 得到结果如下:
 
-<img src="lab-06.assets/h1-h2-ping-each-other.png" alt="h1-h2-ping-each-other" style="zoom: 50%;" />
+<img src="readme.assets/h1-h2-ping-each-other.png" alt="h1-h2-ping-each-other" style="zoom: 50%;" />
 
 上图说明 h1 和 h2 可以正常互相 ping 通.
 
 使用 dump 脚本验证得到如下的实际生成树拓扑:
 
-<img src="lab-06.assets/stp-six-res.png" style="zoom:25%;" />
+<img src="readme.assets/stp-six-res.png" style="zoom:25%;" />
 
 两种机制结合的实现得到了验证.
 
@@ -306,7 +306,7 @@ RSTP 比 STP 收敛更快, 有以下三方面的因素:
 
 在调试过程中, 曾经遇到过这样的问题:
 
-<img src="lab-06.assets/add-sw-dup.png" alt="add-sw-dup" style="zoom:33%;" />
+<img src="readme.assets/add-sw-dup.png" alt="add-sw-dup" style="zoom:33%;" />
 
 如图所示, 将交换机转发表和生成树机制结合后, `ping` 时遇到了 `dup` 错误, 这说明交换机转发表并没有利用生成树机制的结果规避环形拓扑, 从而导致了广播风暴. 最后经排查发现是因为没有对 `Alternative` 端口的收发加以限制. 加上这部分逻辑之后, 不再触发 `dup` 错误.
 

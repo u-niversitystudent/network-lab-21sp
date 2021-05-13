@@ -2,6 +2,7 @@
 #include "ether.h"
 #include "log.h"
 
+#include <assert.h>
 #include <stdlib.h>
 
 ustack_t *instance;
@@ -33,7 +34,7 @@ void iface_send_packet(iface_info_t *iface, const char *packet, int len) {
              sizeof(struct sockaddr_ll)) < 0) {
     perror("Send raw packet failed");
   }
-
+  assert(packet && "PACKET IS NULL");
   free(packet);
 }
 

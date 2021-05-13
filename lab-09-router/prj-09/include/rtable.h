@@ -11,7 +11,8 @@
 // 	 2, addresses are stored in host byte order.
 typedef struct {
   struct list_head list;
-  u32 dest;            // destination ip address (could be network or host)
+  u32 dest;            // destination ip address [in host order]
+                       // (could be network or host)
   u32 mask;            // network mask of dest
   u32 gw;              // ip address of next hop (will be 0 if dest is in
                        // the same network with iface)

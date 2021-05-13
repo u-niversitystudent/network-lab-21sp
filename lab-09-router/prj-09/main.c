@@ -12,8 +12,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-// handle packet, hand the packet to handle_ip_packet or handle_arp_packet
+// handle packet:
+// hand the packet to handle_ip_packet or handle_arp_packet
 // according to ether_type
+// ! remember: iface recv the packet
 void handle_packet(iface_info_t *iface, char *packet, int len) {
   struct ether_header *eh = (struct ether_header *)packet;
 
@@ -27,7 +29,7 @@ void handle_packet(iface_info_t *iface, char *packet, int len) {
     handle_arp_packet(iface, packet, len);
     break;
   default:
-    log(ERROR, "Unknown packet type 0x%04hx, ingore it.",
+    log(ERROR, "Unknown packet type 0x%04hx, ignore it.",
         ntohs(eh->ether_type));
     break;
   }
@@ -93,6 +95,8 @@ int main(int argc, const char **argv) {
   load_rtable_from_kernel();
 
   ustack_run();
+
+  arpcache_destroy();
 
   return 0;
 }

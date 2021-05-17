@@ -3,6 +3,6 @@ project(prj_10 C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(prj_10 main.c)
+add_executable(prj_10 main.c trie.c fmt.c fread.c)
 
 include_directories(include)

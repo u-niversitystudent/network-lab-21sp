@@ -37,7 +37,9 @@ void trie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask, u32 *s_port,
 
 int pt_insert_node(trie_node_t *head, u32 ip, u32 mask, u32 port);
 
-u32 pt_find_route(trie_node_t *root, u32 ip, u32 mask);
+trie_node_t *pt_find_route(trie_node_t *root, u32 ip);
+
+u32 pt_find_route_with_mask(trie_node_t *root, u32 ip, u32 mask);
 
 trie_node_t *pt_new_node();
 

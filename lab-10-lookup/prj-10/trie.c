@@ -10,6 +10,8 @@
 #include "general.h"
 #include "fread.h"
 
+const u64 zero_64 = 0;
+
 void trie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask,
           u32 *s_port, u32 *a_port) {
 
@@ -30,9 +32,11 @@ void trie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask,
             time_end = {0, 0};
     clock_gettime(CLOCK_REALTIME, &time_start);
 
-    for (int i = NUM_REC; i > 0; --i)
-        a_port[NUM_REC - i] = pt_find_route(head, s_ip[NUM_REC - i],
-                                            s_mask[NUM_REC - i]);
+    trie_node_t *tmp;
+    for (int i = 0; i < NUM_REC; ++i) {
+        tmp = pt_find_route(head, s_ip[i]);
+        a_port[i] = tmp ? tmp->port : 0xFFFF;
+    }
 
     clock_gettime(CLOCK_REALTIME, &time_end);
 
@@ -41,10 +45,24 @@ void trie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask,
                       + ((double) time_end.tv_nsec -
                          (double) time_start.tv_nsec) / NUM_REC;
 
-    fprintf(stdout, "time per lookup: %.5lf ns.\n", interval);
-
-    printf("res: (0=true, else fault) %d\n", \
-    memcmp(s_port, a_port, NUM_REC));
+    // diff
+    printf("--------\nDiff:\n");
+    int count = 0;
+    for (int i = 0; i < NUM_REC; ++i) {
+        if (s_port[i] != a_port[i]) {
+            count++;
+            printf(" DATA: port=%d when ip="IP_FMT" mask=%d \n"
+                   "ROUTE: port=%d\n",
+                   s_port[i], LE_IP_FMT_STR(s_ip[i]), s_mask[i],
+                   a_port[i]);
+        }
+    }
+    // summary
+    printf("--------\n"
+           "Summary:\n"
+           "diff:\t %d times.\n"
+           "time:\t %.5lf ns per lookup.\n",
+           count, interval);
 
 }
 
@@ -77,7 +95,36 @@ int pt_insert_node(trie_node_t *head, u32 ip, u32 mask, u32 port) {
     return 1;
 }
 
-u32 pt_find_route(trie_node_t *root, u32 ip, u32 mask) {
+trie_node_t *pt_find_route(trie_node_t *root, u32 ip) {
+    trie_node_t *found = NULL, *current = root;
+    for (int i = 0; i < IP_LEN; ++i) {
+        if (current == NULL) break;
+
+        if ((ip << i) & IP_HIGH) { // 1
+            if (IS_NULL(current->rchild)) break;
+            else {
+                current = current->rchild;
+                u32 cmp = (u32) ((ip | zero_64) << (i + 1));
+                if (current->match == 1 && cmp == 0)
+                    found = current;
+            }
+        } else { // 0
+            if (IS_NULL(current->lchild)) break;
+            else {
+                current = current->lchild;
+                u32 cmp = (u32) ((ip | zero_64) << (i + 1));
+                if (current->match == 1 && cmp == 0)
+                    found = current;
+            }
+        }
+
+    }
+
+    return found;
+}
+
+// only for test
+u32 pt_find_route_with_mask(trie_node_t *root, u32 ip, u32 mask) {
     trie_node_t *found = NULL, *current = root;
     for (int i = 0; i < mask; ++i) {
         if (current == NULL) break;

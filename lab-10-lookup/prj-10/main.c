@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "fread.h"
 #include "trie.h"
 #include "general.h"
 

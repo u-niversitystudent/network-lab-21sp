@@ -15,26 +15,26 @@ const u64 zero_64 = 0;
 void trie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask,
           u32 *s_port, u32 *a_port) {
 
+    // read dataset, prepare buffer
     memset(s_ip, 0, sizeof(u32) * NUM_REC);
     memset(s_mask, 0, sizeof(u32) * NUM_REC);
     memset(s_port, 0, sizeof(u32) * NUM_REC);
     memset(a_port, 0, sizeof(u32) * NUM_REC);
-
     read_all_data(fptr, path, s_ip, s_mask, s_port);
 
-    // Construct
-    trie_node_t *head = pt_new_node();
+    trie_node_t *root = pt_new_node();
     for (int i = 0; i < NUM_REC; ++i)
-        pt_insert_node(head, s_ip[i], s_mask[i], s_port[i]);
+        pt_insert_node(root, s_ip[i], s_mask[i], s_port[i]);
+
+    trie_node_t *tmp;
 
     struct timespec
             time_start = {0, 0},
             time_end = {0, 0};
     clock_gettime(CLOCK_REALTIME, &time_start);
 
-    trie_node_t *tmp;
     for (int i = 0; i < NUM_REC; ++i) {
-        tmp = pt_find_route(head, s_ip[i]);
+        tmp = pt_find_route(root, s_ip[i]);
         a_port[i] = tmp ? tmp->port : 0xFFFF;
     }
 
@@ -67,7 +67,6 @@ void trie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask,
 }
 
 int pt_insert_node(trie_node_t *head, u32 ip, u32 mask, u32 port) {
-    // Traverse the tree bit by bit
     trie_node_t *current = head;
     for (int i = 0; i < mask; ++i) {
         if ((ip << i) & IP_HIGH) { // 1
@@ -83,17 +82,12 @@ int pt_insert_node(trie_node_t *head, u32 ip, u32 mask, u32 port) {
             }
             current = current->lchild;
         }
-
-        // last layer
-        if (i == mask - 1) {
-            current->match = 1;
-            current->port = port;
-            // DEBUG info (not used anymore):
-            // current->ip = ip & (IP_BCAST << (IP_LEN - mask));
-            return 0;
-        }
     }
-    return 1;
+    current->match = 1;
+    current->port = port;
+    // DEBUG info (not used anymore):
+    // current->ip = ip & (IP_BCAST << (IP_LEN - mask));
+    return 0;
 }
 
 trie_node_t *pt_find_route(trie_node_t *root, u32 ip) {

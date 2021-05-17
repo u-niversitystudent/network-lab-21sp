@@ -87,8 +87,9 @@ int pt_insert_node(trie_node_t *head, u32 ip, u32 mask, u32 port) {
         // last layer
         if (i == mask - 1) {
             current->match = 1;
-            current->ip = ip & (IP_BCAST << (IP_LEN - mask));
             current->port = port;
+            // DEBUG info (not used anymore):
+            // current->ip = ip & (IP_BCAST << (IP_LEN - mask));
             return 0;
         }
     }
@@ -117,9 +118,7 @@ trie_node_t *pt_find_route(trie_node_t *root, u32 ip) {
                     found = current;
             }
         }
-
     }
-
     return found;
 }
 
@@ -153,8 +152,7 @@ void pt_dump(trie_node_t *head) {
     if (head != NULL) {
         pt_dump(head->lchild);
         if (head->match)
-            printf("[Matched=%d] IP: "IP_FMT" Port: %d\n", \
-        head->match, LE_IP_FMT_STR(head->ip), head->port);
+            printf("[Matched=%d] Port: %d\n", head->match, head->port);
         pt_dump(head->rchild);
     }
 }

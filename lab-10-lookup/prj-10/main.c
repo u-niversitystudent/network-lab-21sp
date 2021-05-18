@@ -21,7 +21,7 @@ u32 s_ip[NUM_REC], s_mask[NUM_REC], s_port[NUM_REC], a_port[NUM_REC];
 int main(int argc, char **argv) {
     int if_print_result = 0;
     for (int i = 0; i < argc && if_print_result==0 ; ++i) {
-        if_print_result = strncmp(argv[i], "-r", 2);
+        if_print_result = strncmp(argv[i], "-r", 2) ? 0 : 1;
     }
 
     FILE *fptr = NULL;

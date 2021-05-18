@@ -22,7 +22,7 @@ void read_all_data(FILE *fptr, char *path, u32 *ip, u32 *mask, u32 *port) {
     // single line buffer
     char line[MAX_LINE_LEN] = {0}, in;
     // test
-    int loc = 0, flag_eof = 0;
+    int loc, flag_eof = 0;
     for (int i = 0; i < NUM_REC && flag_eof == 0; ++i) {
         // flush buffer
         loc = 0;

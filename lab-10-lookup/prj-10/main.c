@@ -1,8 +1,11 @@
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "fread.h"
 #include "trie.h"
 #include "general.h"
+#include "ip.h"
 
 // sample for unit test
 char *test01 = "1.0.4.0 24 3\n";
@@ -16,8 +19,31 @@ char *dataset_path = "../forwarding-table.txt";
 u32 s_ip[NUM_REC], s_mask[NUM_REC], s_port[NUM_REC], a_port[NUM_REC];
 
 int main(int argc, char **argv) {
+    int if_print_result = 0;
+    if (argc > 1) {
+        if_print_result = atoi(argv[1]);
+    }
+
     FILE *fptr = NULL;
+
+    printf("Exec Trie function...\n");
     trie(fptr, dataset_path, s_ip, s_mask, s_port, a_port);
+
+    // decide if print result
+
+    if (if_print_result) {
+        // Result
+        printf("--------\nResult:\n");
+        for (int i = 0; i < NUM_REC; ++i) {
+            if (s_port[i] == a_port[i]) printf("[same]");
+            else printf("[diff]");
+
+            printf("DATA: port=%d when ip="IP_FMT" mask=%d \n"
+                   "     ROUTE: port=%d\n",
+                   s_port[i], LE_IP_FMT_STR(s_ip[i]), s_mask[i],
+                   a_port[i]);
+        }
+    }
 
     return 0;
 }

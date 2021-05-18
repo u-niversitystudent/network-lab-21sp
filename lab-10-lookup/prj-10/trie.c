@@ -26,6 +26,8 @@ void trie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask,
     for (int i = 0; i < NUM_REC; ++i)
         pt_insert_node(root, s_ip[i], s_mask[i], s_port[i]);
 
+    // for cmp group:
+    // trie_node_t *tmp = pt_new_node(); tmp->port=0xFFFF;
     trie_node_t *tmp;
 
     struct timespec
@@ -45,24 +47,17 @@ void trie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask,
                       + ((double) time_end.tv_nsec -
                          (double) time_start.tv_nsec) / NUM_REC;
 
-    // diff
-    printf("--------\nDiff:\n");
+
     int count = 0;
-    for (int i = 0; i < NUM_REC; ++i) {
-        if (s_port[i] != a_port[i]) {
-            count++;
-            printf(" DATA: port=%d when ip="IP_FMT" mask=%d \n"
-                   "ROUTE: port=%d\n",
-                   s_port[i], LE_IP_FMT_STR(s_ip[i]), s_mask[i],
-                   a_port[i]);
-        }
-    }
+    for (int i = 0; i < NUM_REC; ++i)
+        if (s_port[i] != a_port[i]) count++;
+
     // summary
     printf("--------\n"
-           "Summary:\n"
+           "Summary for %d times' lookups:\n"
            "diff:\t %d times.\n"
            "time:\t %.5lf ns per lookup.\n",
-           count, interval);
+           NUM_REC, count, interval);
 
 }
 

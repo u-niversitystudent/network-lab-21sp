@@ -6,7 +6,6 @@
 #define PRJ_10_REDUCEDTRIE_H
 
 #define IS_RT_INODE(ptr) (*(int *)(ptr)==0)
-#define IS_RT_LEAF(ptr) (*(int *)(ptr)!=0)
 
 #include "types.h"
 

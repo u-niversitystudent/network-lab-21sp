@@ -1,0 +1,25 @@
+Executing function normal trie
+--------
+Summary for 697882 times' lookups:
+diff:	 2646 times.
+time:	 99.95931 ns per lookup.
+Executing function normal trie
+--------
+Summary for 697882 times' lookups:
+diff:	 2646 times.
+time:	 99.54090 ns per lookup.
+Executing function normal trie
+--------
+Summary for 697882 times' lookups:
+diff:	 2646 times.
+time:	 99.54935 ns per lookup.
+Executing function normal trie
+--------
+Summary for 697882 times' lookups:
+diff:	 2646 times.
+time:	 103.28738 ns per lookup.
+Executing function normal trie
+--------
+Summary for 697882 times' lookups:
+diff:	 2646 times.
+time:	 115.13838 ns per lookup.

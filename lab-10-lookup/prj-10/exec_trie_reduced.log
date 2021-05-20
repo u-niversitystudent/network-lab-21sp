@@ -1,0 +1,25 @@
+Executing function reduced trie
+--------
+Summary for 697882 times' lookups:
+diff:	 2646 times.
+time:	 159.63028 ns per lookup.
+Executing function reduced trie
+--------
+Summary for 697882 times' lookups:
+diff:	 2646 times.
+time:	 159.41606 ns per lookup.
+Executing function reduced trie
+--------
+Summary for 697882 times' lookups:
+diff:	 2646 times.
+time:	 159.57827 ns per lookup.
+Executing function reduced trie
+--------
+Summary for 697882 times' lookups:
+diff:	 2646 times.
+time:	 161.55998 ns per lookup.
+Executing function reduced trie
+--------
+Summary for 697882 times' lookups:
+diff:	 2646 times.
+time:	 165.60708 ns per lookup.

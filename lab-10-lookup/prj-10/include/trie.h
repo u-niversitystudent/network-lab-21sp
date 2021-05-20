@@ -14,7 +14,8 @@ typedef struct trie_node {
 } trie_node_t;
 
 void trie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask, u32 *s_port,
-          u32 *a_port);
+          u32 *a_port,
+          int test_lower_bound, int test_upper_bound);
 
 int pt_insert_node(trie_node_t *head, u32 ip, u32 mask, u32 port);
 

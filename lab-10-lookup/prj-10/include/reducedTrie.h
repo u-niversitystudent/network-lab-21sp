@@ -31,6 +31,6 @@ struct rtLeaf {
 };
 
 void reducedTrie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask, u32 *s_port,
-                 u32 *a_port);
+                 u32 *a_port, int test_lower_bound, int test_upper_bound);
 
 #endif //PRJ_10_REDUCEDTRIE_H

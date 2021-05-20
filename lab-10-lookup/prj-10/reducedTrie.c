@@ -223,6 +223,30 @@ int rt_Insert(struct rtInode *root, u32 ip, u32 mask, u32 port) {
     return 0;
 }
 
+u32 rt_find_route(void *root, u32 ip) {
+    void *current = root;
+    u32 port = NULL_PORT;
+    while (current) {
+        if (IS_RT_INODE(current)) {
+            // meet internal node
+            if (EXTRACT_BIT(ip, ((struct rtInode *) current)->cmpBit)) {
+                current = ((struct rtInode *) (current))->rightChild;
+            } else {
+                current = ((struct rtInode *) (current))->leftChild;
+            }
+        } else {
+            // meet leaf node
+            if ((ip &
+                 (IP_BCAST << (IP_LEN - ((struct rtLeaf *) (current))->mask)))
+                == (((struct rtLeaf *) (current))->ip)) {
+                port = ((struct rtLeaf *) (current))->port;
+            }
+            current = NULL;
+        }
+    }
+    return port;
+}
+
 void rt_dump(void *ptr) {
     if (ptr == NULL) return;
     if (IS_RT_INODE(ptr)) {
@@ -237,7 +261,9 @@ void rt_dump(void *ptr) {
 }
 
 void reducedTrie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask, u32 *s_port,
-                 u32 *a_port) {
+                 u32 *a_port,
+                 int test_lower_bound, int test_upper_bound) {
+
     // read dataset, prepare buffer
     memset(s_ip, 0, sizeof(u32) * NUM_REC);
     memset(s_mask, 0, sizeof(u32) * NUM_REC);
@@ -248,52 +274,45 @@ void reducedTrie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask, u32 *s_port,
     struct rtInode *root = new_rtInode();
     root->cmpBit = 0;
 
-    int test_lower_bound = 0; // 0 start
-    int test_upper_bound = 60; // up bound should be NUM_REC
+    int test_num = test_upper_bound - test_lower_bound;
 
     for (int i = test_lower_bound; i < test_upper_bound; ++i) {
-        // printf("Hello %3d times\n", i-test_lower_bound);
+        printf("Hello I am still here... %3d times\n",
+               i - test_lower_bound);
         rt_Insert(root, s_ip[i], s_mask[i], s_port[i]);
     }
 
-    rt_dump((void *) root);
+    //rt_dump((void *) root);
+
     // for cmp group:
     // * trie_node_t *tmp = pt_new_node(); tmp->port=0xFFFF;
     // trie_node_t *tmp;
-
-#if 0
 
     struct timespec
             time_start = {0, 0},
             time_end = {0, 0};
     clock_gettime(CLOCK_REALTIME, &time_start);
 
-
-    for (int i = 0; i < NUM_REC; ++i) {
-        tmp = pt_find_route(root, s_ip[i]);
-        a_port[i] = tmp ? tmp->port : 0xFFFF;
+    for (int i = test_lower_bound; i < test_upper_bound; ++i) {
+        a_port[i] = rt_find_route(root, s_ip[i]);
     }
-
 
     clock_gettime(CLOCK_REALTIME, &time_end);
 
     double interval = ((double) time_end.tv_sec
-                       - (double) time_start.tv_sec) * 1000000000 / NUM_REC
+                       - (double) time_start.tv_sec) * 1000000000 / test_num
                       + ((double) time_end.tv_nsec -
-                         (double) time_start.tv_nsec) / NUM_REC;
+                         (double) time_start.tv_nsec) / test_num;
 
 
     int count = 0;
-    for (int i = 0; i < NUM_REC; ++i)
+    for (int i = test_lower_bound; i < test_upper_bound; ++i)
         if (s_port[i] != a_port[i]) count++;
-#endif
 
     // summary
-#if 0
     printf("--------\n"
            "Summary for %d times' lookups:\n"
            "diff:\t %d times.\n"
            "time:\t %.5lf ns per lookup.\n",
-           NUM_REC, count, interval);
-#endif
+           test_num, count, interval);
 }

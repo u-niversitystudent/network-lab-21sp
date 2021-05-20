@@ -13,7 +13,10 @@
 const u64 zero_64 = 0;
 
 void trie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask,
-          u32 *s_port, u32 *a_port) {
+          u32 *s_port, u32 *a_port,
+          int test_lower_bound, int test_upper_bound) {
+
+    int test_num = test_upper_bound - test_lower_bound;
 
     // read dataset, prepare buffer
     memset(s_ip, 0, sizeof(u32) * NUM_REC);
@@ -23,33 +26,34 @@ void trie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask,
     read_all_data(fptr, path, s_ip, s_mask, s_port);
 
     trie_node_t *root = pt_new_node();
-    for (int i = 0; i < NUM_REC; ++i)
+    for (int i = test_lower_bound; i < test_upper_bound; ++i) {
         pt_insert_node(root, s_ip[i], s_mask[i], s_port[i]);
+    }
 
     // for cmp group:
     // trie_node_t *tmp = pt_new_node(); tmp->port=0xFFFF;
-    trie_node_t *tmp;
+    trie_node_t *tmp=NULL;
 
     struct timespec
             time_start = {0, 0},
             time_end = {0, 0};
     clock_gettime(CLOCK_REALTIME, &time_start);
 
-    for (int i = 0; i < NUM_REC; ++i) {
-        tmp = pt_find_route(root, s_ip[i]);
+    for (int i = test_lower_bound; i < test_upper_bound; ++i) {
+//        tmp = pt_find_route(root, s_ip[i]);
         a_port[i] = tmp ? tmp->port : 0xFFFF;
     }
 
     clock_gettime(CLOCK_REALTIME, &time_end);
 
     double interval = ((double) time_end.tv_sec
-                       - (double) time_start.tv_sec) * 1000000000 / NUM_REC
+                       - (double) time_start.tv_sec) * 1000000000 / test_num
                       + ((double) time_end.tv_nsec -
-                         (double) time_start.tv_nsec) / NUM_REC;
+                         (double) time_start.tv_nsec) / test_num;
 
 
     int count = 0;
-    for (int i = 0; i < NUM_REC; ++i)
+    for (int i = test_lower_bound; i < test_upper_bound; ++i)
         if (s_port[i] != a_port[i]) count++;
 
     // summary
@@ -57,7 +61,7 @@ void trie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask,
            "Summary for %d times' lookups:\n"
            "diff:\t %d times.\n"
            "time:\t %.5lf ns per lookup.\n",
-           NUM_REC, count, interval);
+           test_num, count, interval);
 
 }
 

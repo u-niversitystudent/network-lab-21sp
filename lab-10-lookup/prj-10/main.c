@@ -20,24 +20,33 @@ char *dataset_path = "../forwarding-table.txt";
 u32 s_ip[NUM_REC], s_mask[NUM_REC], s_port[NUM_REC], a_port[NUM_REC];
 
 int main(int argc, char **argv) {
-
     FILE *fptr = NULL;
+    int test_lower_bound = 0; // 0 start
+    int test_upper_bound = 10000; // up bound might be NUM_REC
 
-    reducedTrie(fptr, dataset_path, s_ip, s_mask, s_port, a_port);
-
-    /*
-    int if_print_result = 0;
-    for (int i = 0; i < argc && if_print_result==0 ; ++i) {
+    /* decode args */
+    int if_print_result = 0, if_rt = 0;
+    for (int i = 0; i < argc && if_print_result == 0; ++i) {
+        // if print
         if_print_result = strncmp(argv[i], "-r", 2) ? 0 : 1;
+        if_rt = strncmp(argv[i], "-t", 2) ? 0 : 1;
     }
 
-    FILE *fptr = NULL;
-
-    printf("Exec Trie function...\n");
-    trie(fptr, dataset_path, s_ip, s_mask, s_port, a_port);
-
+    printf("Executing function ");
+    if (if_rt) {
+        printf("reduced trie\n");
+        reducedTrie(fptr, dataset_path,
+                    s_ip, s_mask, s_port,
+                    a_port,
+                    test_lower_bound, test_upper_bound);
+    } else {
+        printf("normal trie\n");
+        trie(fptr, dataset_path, s_ip, s_mask, s_port,
+             a_port,
+             test_lower_bound,
+             test_upper_bound);
+    }
     // decide if print result
-
     if (if_print_result) {
         // Result
         printf("--------\nResult:\n");
@@ -51,7 +60,6 @@ int main(int argc, char **argv) {
                    a_port[i]);
         }
     }
-     */
 
     return 0;
 }

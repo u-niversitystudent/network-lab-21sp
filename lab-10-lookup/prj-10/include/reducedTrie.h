@@ -13,6 +13,9 @@
 #define NULL_PORT 0xFFFF
 #define EXTRACT_BIT(ip, i) ((ip) & (0x80000000 >> (i)))
 
+#define MAX(a, b) (((a)>(b))?(a):(b))
+#define MIN(a, b) (((a)<(b))?(a):(b))
+
 struct rtInode {
     int isntInode; // 0 = is inode
     int cmpBit;
@@ -27,6 +30,6 @@ struct rtLeaf {
 };
 
 void reducedTrie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask, u32 *s_port,
-                 u32 *a_port) ;
+                 u32 *a_port);
 
 #endif //PRJ_10_REDUCEDTRIE_H

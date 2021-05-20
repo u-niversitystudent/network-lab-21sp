@@ -36,6 +36,34 @@ int shared_prefix(u32 ip1, u32 ip2) {
     return (i - 1); // -1 when 0-bit not match
 }
 
+u32 find_max_ip(void *root) {
+    u32 max = 0;
+
+    if (root != NULL) {
+        if (IS_RT_INODE(root)) {
+            max = MAX(find_max_ip(((struct rtInode *) root)->leftChild),
+                      find_max_ip(((struct rtInode *) root)->rightChild));
+        } else {
+            max = ((struct rtLeaf *) root)->ip;
+        }
+    }
+    return max;
+}
+
+u32 find_min_ip(void *root) {
+    u32 min = 0xFFFFFFFF;
+
+    if (root != NULL) {
+        if (IS_RT_INODE(root)) {
+            min = MIN(find_min_ip(((struct rtInode *) root)->leftChild),
+                      find_min_ip(((struct rtInode *) root)->rightChild));
+        } else {
+            min = ((struct rtLeaf *) root)->ip;
+        }
+    }
+    return min;
+}
+
 int rt_Insert(struct rtInode *root, u32 ip, u32 mask, u32 port) {
     u32 maskedIP = ip & (IP_BCAST << (IP_LEN - mask));
     void *current = root;
@@ -56,7 +84,24 @@ int rt_Insert(struct rtInode *root, u32 ip, u32 mask, u32 port) {
                     new->parent = current;
                     p->rightChild = (void *) new;
                     return 1;
-                } else { // current have right child
+                } else {
+                    // current have right child
+
+                    if (IS_RT_INODE(p->rightChild)) {
+                        // maybe need insert a internal node
+                        u32 min_ip = find_min_ip(
+                                (struct rtInode *) (p->rightChild));
+                        if (maskedIP < min_ip) {
+                            struct rtInode *new_inode = new_rtInode();
+                            new_inode->cmpBit = shared_prefix(maskedIP,
+                                                              min_ip) + 1;
+                            new_inode->rightChild = p->rightChild;
+                            new_inode->parent = current;
+                            ((struct rtInode *) (p->rightChild))->parent =
+                                    new_inode;
+                            p->rightChild = (void *) new_inode;
+                        }
+                    }
                     current = (void *) p->rightChild;
                 }
             } else {
@@ -69,7 +114,24 @@ int rt_Insert(struct rtInode *root, u32 ip, u32 mask, u32 port) {
                     new->parent = current;
                     p->leftChild = (void *) new;
                     return 1;
-                } else { // current have right child
+                } else {
+                    // current have left child
+
+                    if (IS_RT_INODE(p->leftChild)) {
+                        // maybe need insert a internal node
+                        u32 max_ip = find_max_ip(
+                                (struct rtInode *) (p->leftChild));
+                        if (maskedIP > max_ip) {
+                            struct rtInode *new_inode = new_rtInode();
+                            new_inode->cmpBit = shared_prefix(maskedIP,
+                                                              max_ip) + 1;
+                            new_inode->leftChild = p->leftChild;
+                            new_inode->parent = current;
+                            ((struct rtInode *) (p->leftChild))->parent =
+                                    new_inode;
+                            p->leftChild = (void *) new_inode;
+                        }
+                    }
                     current = (void *) p->leftChild;
                 }
             }
@@ -141,8 +203,7 @@ void reducedTrie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask, u32 *s_port,
     struct rtInode *root = new_rtInode();
     root->cmpBit = 0;
 
-    for (int i = 0; i < 5; ++i) // up bound should be NUM_REC
-    {
+    for (int i = 0; i < 5; ++i) { // up bound should be NUM_REC
         rt_Insert(root, s_ip[i], s_mask[i], s_port[i]);
     }
 

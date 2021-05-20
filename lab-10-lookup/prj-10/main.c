@@ -14,7 +14,8 @@ char *test02 = "1.4.128.0 19 1\n";
 
 // path of static dataset
 //  knowing target program is in 'prj10/cmake-build-debug/'
-char *dataset_path = "../forwarding-table.txt";
+char *dataset_path_when_in_folder = "../forwarding-table.txt";
+char *dataset_path = "./forwarding-table.txt";
 
 // static cache
 u32 s_ip[NUM_REC], s_mask[NUM_REC], s_port[NUM_REC], a_port[NUM_REC];
@@ -41,7 +42,7 @@ int main(int argc, char **argv) {
                     test_lower_bound, test_upper_bound);
     } else {
         printf("normal trie\n");
-        reducedTrie(fptr, dataset_path, s_ip, s_mask, s_port,
+        trie(fptr, dataset_path, s_ip, s_mask, s_port,
              a_port,
              test_lower_bound,
              test_upper_bound);

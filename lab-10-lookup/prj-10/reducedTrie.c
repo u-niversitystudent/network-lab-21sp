@@ -235,22 +235,22 @@ int rt_Insert(struct rtInode *root, u32 ip, u32 mask, u32 port) {
 u32 rt_find_route(void *root, u32 ip) {
     void *current = root;
     u32 port = NULL_PORT;
+    struct rtInode *tmpInode;
+    struct rtLeaf *tmpLeaf;
     while (current) {
         if (IS_RT_INODE(current)) {
             // meet internal node
-            if (EXTRACT_BIT(ip, ((struct rtInode *) current)->cmpBit)) {
-                current = ((struct rtInode *) (current))->rightChild;
-            } else {
-                current = ((struct rtInode *) (current))->leftChild;
-            }
+            tmpInode = (struct rtInode *) current;
+            current = EXTRACT_BIT(ip, tmpInode->cmpBit)
+                      ? tmpInode->rightChild
+                      : tmpInode->leftChild;
         } else {
             // meet leaf node
-            if ((ip &
-                 (IP_BCAST << (IP_LEN - ((struct rtLeaf *) (current))->mask)))
-                == (((struct rtLeaf *) (current))->ip)) {
-                port = ((struct rtLeaf *) (current))->port;
+            tmpLeaf = (struct rtLeaf *) current;
+            if (((ip ^ tmpLeaf->ip) & ~(IP_LEN >> tmpLeaf->mask)) == 0) {
+                port = tmpLeaf->port;
             }
-            current = NULL;
+            return port;
         }
     }
     return port;

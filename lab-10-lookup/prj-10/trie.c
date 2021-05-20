@@ -32,7 +32,7 @@ void trie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask,
 
     // for cmp group:
     // trie_node_t *tmp = pt_new_node(); tmp->port=0xFFFF;
-    trie_node_t *tmp=NULL;
+    trie_node_t *tmp;
 
     struct timespec
             time_start = {0, 0},
@@ -40,7 +40,7 @@ void trie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask,
     clock_gettime(CLOCK_REALTIME, &time_start);
 
     for (int i = test_lower_bound; i < test_upper_bound; ++i) {
-//        tmp = pt_find_route(root, s_ip[i]);
+        tmp = pt_find_route(root, s_ip[i]);
         a_port[i] = tmp ? tmp->port : 0xFFFF;
     }
 

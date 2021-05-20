@@ -92,9 +92,10 @@ int rt_Insert(struct rtInode *root, u32 ip, u32 mask, u32 port) {
                         u32 min_ip = find_min_ip(
                                 (struct rtInode *) (p->rightChild));
                         if (maskedIP < min_ip) {
+                            int cmp = shared_prefix(maskedIP,
+                                                    min_ip);
                             struct rtInode *new_inode = new_rtInode();
-                            new_inode->cmpBit = shared_prefix(maskedIP,
-                                                              min_ip) + 1;
+                            new_inode->cmpBit = cmp + 1;
                             new_inode->rightChild = p->rightChild;
                             new_inode->parent = current;
                             ((struct rtInode *) (p->rightChild))->parent =
@@ -122,9 +123,10 @@ int rt_Insert(struct rtInode *root, u32 ip, u32 mask, u32 port) {
                         u32 max_ip = find_max_ip(
                                 (struct rtInode *) (p->leftChild));
                         if (maskedIP > max_ip) {
+                            int cmp = shared_prefix(maskedIP,
+                                                    max_ip);
                             struct rtInode *new_inode = new_rtInode();
-                            new_inode->cmpBit = shared_prefix(maskedIP,
-                                                              max_ip) + 1;
+                            new_inode->cmpBit = cmp + 1;
                             new_inode->leftChild = p->leftChild;
                             new_inode->parent = current;
                             ((struct rtInode *) (p->leftChild))->parent =

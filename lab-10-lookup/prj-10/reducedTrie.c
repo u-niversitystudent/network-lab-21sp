@@ -9,7 +9,6 @@
 
 #include "reducedTrie.h"
 #include "ip.h"
-#include "fmt.h"
 #include "fread.h"
 #include "general.h"
 
@@ -37,28 +36,38 @@ int shared_prefix(u32 ip1, u32 ip2) {
 }
 
 u32 find_max_ip(void *root) {
-    u32 max = 0;
+    u32 max = 0, tmpIP;
+    struct rtInode *tmpR, *tmpL;
 
-    if (root != NULL) {
+    while (root != NULL) {
         if (IS_RT_INODE(root)) {
-            max = MAX(find_max_ip(((struct rtInode *) root)->leftChild),
-                      find_max_ip(((struct rtInode *) root)->rightChild));
+            tmpR = ((struct rtInode *) root)->rightChild;
+            tmpL = ((struct rtInode *) root)->leftChild;
+            if (tmpR == NULL) root = tmpL;
+            else root = tmpR;
         } else {
-            max = ((struct rtLeaf *) root)->ip;
+            tmpIP = ((struct rtLeaf *) root)->ip;
+            max = MAX(tmpIP, max);
+            break;
         }
     }
     return max;
 }
 
 u32 find_min_ip(void *root) {
-    u32 min = 0xFFFFFFFF;
+    u32 min = 0xFFFF, tmpIP;
+    struct rtInode *tmpR, *tmpL;
 
-    if (root != NULL) {
+    while (root != NULL) {
         if (IS_RT_INODE(root)) {
-            min = MIN(find_min_ip(((struct rtInode *) root)->leftChild),
-                      find_min_ip(((struct rtInode *) root)->rightChild));
+            tmpR = ((struct rtInode *) root)->rightChild;
+            tmpL = ((struct rtInode *) root)->leftChild;
+            if (tmpL == NULL) root = tmpR;
+            else root = tmpL;
         } else {
-            min = ((struct rtLeaf *) root)->ip;
+            tmpIP = ((struct rtLeaf *) root)->ip;
+            min = MIN(tmpIP, min);
+            break;
         }
     }
     return min;
@@ -277,8 +286,8 @@ void reducedTrie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask, u32 *s_port,
     int test_num = test_upper_bound - test_lower_bound;
 
     for (int i = test_lower_bound; i < test_upper_bound; ++i) {
-        printf("Hello I am still here... %3d times\n",
-               i - test_lower_bound);
+        // printf("Hello I am still here... %3d times\n",
+        //        i - test_lower_bound);
         rt_Insert(root, s_ip[i], s_mask[i], s_port[i]);
     }
 

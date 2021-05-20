@@ -22,7 +22,7 @@ u32 s_ip[NUM_REC], s_mask[NUM_REC], s_port[NUM_REC], a_port[NUM_REC];
 int main(int argc, char **argv) {
     FILE *fptr = NULL;
     int test_lower_bound = 0; // 0 start
-    int test_upper_bound = 10000; // up bound might be NUM_REC
+    int test_upper_bound = NUM_REC; // up bound might be NUM_REC
 
     /* decode args */
     int if_print_result = 0, if_rt = 0;
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
                     test_lower_bound, test_upper_bound);
     } else {
         printf("normal trie\n");
-        trie(fptr, dataset_path, s_ip, s_mask, s_port,
+        reducedTrie(fptr, dataset_path, s_ip, s_mask, s_port,
              a_port,
              test_lower_bound,
              test_upper_bound);

@@ -78,11 +78,12 @@ int rt_Insert(struct rtInode *root, u32 ip, u32 mask, u32 port) {
                 // go right
                 if (IS_NULL(p->rightChild)) {
                     // current has no rChild
-                    struct rtLeaf *new = new_rtLeaf();
-                    new->ip = maskedIP;
-                    new->port = port;
-                    new->parent = current;
-                    p->rightChild = (void *) new;
+                    struct rtLeaf *new_leaf = new_rtLeaf();
+                    new_leaf->ip = maskedIP;
+                    new_leaf->port = port;
+                    new_leaf->mask = mask;
+                    new_leaf->parent = current;
+                    p->rightChild = (void *) new_leaf;
                     return 1;
                 } else {
                     // current have right child
@@ -112,11 +113,12 @@ int rt_Insert(struct rtInode *root, u32 ip, u32 mask, u32 port) {
                 // go left
                 if (IS_NULL(p->leftChild)) {
                     // current has no lChild
-                    struct rtLeaf *new = new_rtLeaf();
-                    new->ip = maskedIP;
-                    new->port = port;
-                    new->parent = current;
-                    p->leftChild = (void *) new;
+                    struct rtLeaf *new_leaf = new_rtLeaf();
+                    new_leaf->ip = maskedIP;
+                    new_leaf->port = port;
+                    new_leaf->mask = mask;
+                    new_leaf->parent = current;
+                    p->leftChild = (void *) new_leaf;
                     return 1;
                 } else {
                     // current have left child
@@ -149,8 +151,42 @@ int rt_Insert(struct rtInode *root, u32 ip, u32 mask, u32 port) {
                     (struct rtLeaf *) current;
 
             if (q->ip == maskedIP) {
-                // hit leaf and renew ip
-                q->port = port;
+                // hit,
+                // decide: change some nodes && renew ip
+                struct rtInode *parent = (struct rtInode *) q->parent;
+                if (parent->cmpBit >= mask) {
+                    return 1;
+                } else {
+                    // new leaf should
+                    if (q->mask == mask) {
+                        q->port = port;
+                    } else {
+                        struct rtInode *new_inode = new_rtInode();
+                        struct rtLeaf *new_leaf = new_rtLeaf();
+                        if (parent->leftChild == current) {
+                            parent->leftChild = new_inode;
+                        } else {
+                            parent->rightChild = new_inode;
+                        }
+                        new_inode->parent = parent;
+                        new_leaf->ip = ip;
+                        new_leaf->port = port;
+                        new_leaf->mask = mask;
+                        new_leaf->parent = (void *) new_inode;
+                        q->parent = (void *) new_inode;
+                        if (q->mask < mask) {
+                            new_inode->cmpBit = (int) mask;
+                            new_inode->leftChild = (void *) new_leaf;
+                            new_inode->rightChild = current;
+                        } else {
+                            new_inode->cmpBit = (int) q->mask;
+                            new_inode->leftChild = current;
+                            new_inode->rightChild = (void *) new_leaf;
+                        }
+                    }
+                    return 1;
+                }
+
             } else {
                 // split leaf and add a cmp node
                 int share_len = shared_prefix(q->ip, maskedIP);
@@ -158,6 +194,7 @@ int rt_Insert(struct rtInode *root, u32 ip, u32 mask, u32 port) {
                 struct rtLeaf *new_leaf = new_rtLeaf();
                 new_leaf->ip = maskedIP;
                 new_leaf->port = port;
+                new_leaf->mask = mask;
                 struct rtInode *new_inode = new_rtInode();
 
                 struct rtInode *grandparent = (struct rtInode *) q->parent;
@@ -189,7 +226,7 @@ int rt_Insert(struct rtInode *root, u32 ip, u32 mask, u32 port) {
 void rt_dump(void *ptr) {
     if (ptr == NULL) return;
     if (IS_RT_INODE(ptr)) {
-        printf("compare bit %d\n", ((struct rtInode *) ptr)->cmpBit);
+//        printf("compare bit %d\n", ((struct rtInode *) ptr)->cmpBit);
         rt_dump(((struct rtInode *) ptr)->leftChild);
         rt_dump(((struct rtInode *) ptr)->rightChild);
     } else {
@@ -211,12 +248,15 @@ void reducedTrie(FILE *fptr, char *path, u32 *s_ip, u32 *s_mask, u32 *s_port,
     struct rtInode *root = new_rtInode();
     root->cmpBit = 0;
 
-    for (int i = 0; i < 7; ++i) { // up bound should be NUM_REC
+    int test_lower_bound = 0; // 0 start
+    int test_upper_bound = 60; // up bound should be NUM_REC
+
+    for (int i = test_lower_bound; i < test_upper_bound; ++i) {
+        // printf("Hello %3d times\n", i-test_lower_bound);
         rt_Insert(root, s_ip[i], s_mask[i], s_port[i]);
     }
 
     rt_dump((void *) root);
-    printf("ALL-OVER\n");
     // for cmp group:
     // * trie_node_t *tmp = pt_new_node(); tmp->port=0xFFFF;
     // trie_node_t *tmp;

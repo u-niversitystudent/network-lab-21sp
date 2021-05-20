@@ -25,6 +25,7 @@ struct rtInode {
 struct rtLeaf {
     int isLeaf; // 1 = is leaf
     u32 ip;
+    u32 mask;
     u32 port;
     void *parent;
 };

@@ -136,7 +136,7 @@ void read_all_data(FILE * fptr, char *path, u32 *ip, u32 *mask,u32 *port);
 
 格式转换函数能从所给数据集中的单行字符串提取出正确的信息; 数据集读取从文件中读取字符串, 解析字符串, 并将它们存入全局数组中, 以便各函数调用. 由于这些细琐的函数并不是算法实现的重点, 故不再赘述.
 
-### 调研: PopTrie
+### 调研: 基于 PATRICIA tree 提出的路由匹配算法
 
 <!-- TODO: 介绍某种升级方案 -->
 
@@ -145,6 +145,8 @@ void read_all_data(FILE * fptr, char *path, u32 *ip, u32 *mask,u32 *port);
 <!-- !TODO: 实现某种升级方案 -->
 
 ## 实验结果与分析
+
+<!-- TODO: 别忘写内存消耗 -->
 
 ### Trie
 
@@ -218,6 +220,12 @@ $$
 
 ### PopTrie
 
+<!-- TODO: 实验结果分析 -->
+
+### 比较
+
+<!-- TODO: 两种算法的性能比较 -->
+
 <!-- ## 思考题 -->
 
 <!-- 请将思考/调研结果写到实验报告中 -->
@@ -229,3 +237,6 @@ $$
 ## 参考资料
 
 <!--脚注-->
+
+1. [Sklower K. A tree-based packet routing table for Berkeley unix[C]//USENIX Winter. 1991, 1991: 93-99.](https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.121.9223&rep=rep1&type=pdf)
+2. [data structures - What is the difference between radix trees and Patricia tries? - Computer Science Stack Exchange](https://cs.stackexchange.com/questions/63048/what-is-the-difference-between-radix-trees-and-patricia-tries)

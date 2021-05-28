@@ -12,7 +12,7 @@ script_deps = [ 'ethtool', 'arptables', 'iptables' ]
 
 def check_scripts():
     dir = os.path.abspath(os.path.dirname(sys.argv[0]))
-    
+
     for fname in glob.glob(dir + '/' + 'scripts/*.sh'):
         if not os.access(fname, os.X_OK):
             print '%s should be set executable by using `chmod +x $script_name`' % (fname)
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     check_scripts()
 
     topo = MOSPFTopo()
-    net = Mininet(topo = topo, controller = None) 
+    net = Mininet(topo = topo, controller = None)
 
     h1, h2, r1, r2, r3, r4 = net.get('h1', 'h2', 'r1', 'r2', 'r3', 'r4')
     h1.cmd('ifconfig h1-eth0 10.0.1.11/24')

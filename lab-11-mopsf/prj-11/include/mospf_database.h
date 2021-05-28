@@ -10,11 +10,11 @@ extern struct list_head mospf_db;
 
 typedef struct {
     struct list_head list;
-    u32 rid;
-    u16 seq;
-    int nadv;
-    int alive;
-    struct mospf_lsa *array;
+    u32 rid; // router which sends the LSU message
+    u16 seq; // sequence number of the LSU message
+    int nadv; // number of advertisement int->u32
+    int alive; // alive for #(seconds)
+    struct mospf_lsa *array; // (network, mask, rid)
 } mospf_db_entry_t;
 
 void init_mospf_db();

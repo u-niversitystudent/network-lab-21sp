@@ -27,10 +27,10 @@
 #define DYNAMIC_ROUTING
 
 typedef struct {
-    struct list_head iface_list;    // the list of interfaces
-    int nifs;                        // number of interfaces
-    struct pollfd *fds;                // structure used to poll packets among
-    // all the interfaces
+    struct list_head iface_list; // the list of interfaces
+    int nifs;                    // number of interfaces
+    struct pollfd *fds;          // structure used to poll packets among
+                                 // all the interfaces
 
 #ifdef DYNAMIC_ROUTING
     // used for mospf routing
@@ -44,15 +44,18 @@ typedef struct {
 extern ustack_t *instance;
 
 typedef struct {
-    struct list_head list;        // list node used to link all interfaces
+    struct list_head list; // list node used to link
+                           // all interfaces
 
-    int fd;                        // file descriptor for receiving & sending packets
-    int index;                    // the index (unique ID) of this interface
-    u8 mac[ETH_ALEN];            // mac address of this interface
-    u32 ip;                        // IPv4 address (in host byte order)
-    u32 mask;                    // Network Mask (in host byte order)
-    char name[16];                // name of this interface
-    char ip_str[16];            // readable IP address
+    int fd;                // file descriptor for
+                           // receiving & sending packets
+    int index;             // the index (unique ID)
+                           // of this interface
+    u8 mac[ETH_ALEN];      // mac address of this interface
+    u32 ip;                // IPv4 address (in host byte order)
+    u32 mask;              // Network Mask (in host byte order)
+    char name[16];         // name of this interface
+    char ip_str[16];       // readable IP address
 
 #ifdef DYNAMIC_ROUTING
     // list of mospf neighbors

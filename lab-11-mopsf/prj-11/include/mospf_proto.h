@@ -61,8 +61,8 @@ static inline u16 mospf_checksum(struct mospf_hdr *mospf) {
     return sum;
 }
 
-void mospf_init_hdr(struct mospf_hdr *mospf, u8 type, u16 len, u32 rid,
-                    u32 aid);
+void mospf_init_hdr(struct mospf_hdr *mospf,
+                    u8 type, u16 len, u32 rid, u32 aid);
 
 void mospf_init_hello(struct mospf_hello *hello, u32 mask);
 

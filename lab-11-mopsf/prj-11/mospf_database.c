@@ -192,14 +192,14 @@ void dij_algo_update_rtable(int num) {
     }
 
 #ifdef TEST_DIJ_CALC
-    printf("test dij's calc ");
-    printf("num=%d\ndist\tvisited\tprev\t", num);
+    printf("test dij's calc num=%d\n"
+           "dist\t"
+           "visited\t"
+           "prev\n", num);
     for (int i = 0; i < num; ++i) {
         printf("%d\t%d\t%d\n", dist[i], visited[i], prev[i]);
     }
 #endif
-
-//    printf("check 01\n");
 
     /* update rtable */
 //    for (int i = 0; i < num; ++i) {

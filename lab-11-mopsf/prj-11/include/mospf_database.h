@@ -30,7 +30,7 @@ void init_mospf_db();
 
 void dump_mospf_db(void *param);
 
-int rid_to_index(const u32 verList[], int size, u32 rid);
+int net_to_index(const u32 *verList, int size, u32 net);
 
 VerRes_t find_vertices(int num);
 

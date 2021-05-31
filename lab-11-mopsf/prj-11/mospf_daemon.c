@@ -220,12 +220,7 @@ void *checking_database_thread(void *param) {
             free(pos_db);
         }
 
-        pthread_mutex_unlock(&mospf_lock);
-
         dump_mospf_db(NULL);
-
-
-        pthread_mutex_lock(&mospf_lock);
 
         // TODO: update route table
         dij_algo_update_rtable(GRAPH_SIZE);

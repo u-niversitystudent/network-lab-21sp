@@ -9,7 +9,7 @@ CFLAGS = -g -Wall -Wno-unused-variable -Wno-unused-function -Iinclude
 LDFLAGS = -L.
 
 # marco definitions for tests
-DEFS = -DTEST_FIND_VERTICES
+DEFS = -DTEST_CREATE_GRAPH
 CFLAGS += $(DEFS)
 
 LIBS = -lpthread

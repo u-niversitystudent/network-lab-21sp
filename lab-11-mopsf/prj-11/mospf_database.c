@@ -17,13 +17,18 @@ void init_mospf_db() {
 void dump_mospf_db(void *param) {
     mospf_db_entry_t *pos_db;
     fprintf(stdout, "MOSPF Database:\n");
-    fprintf(stdout, "Router ID\tNetwork\tMask\tNeighbor\n");
+    fprintf(stdout, "Router ID\t"
+                    "Nbr Network\t"
+                    "Nbr Mask\t"
+                    "Nbr RID\n");
     fprintf(stdout, "--------------------------------------\n");
     list_for_each_entry(
             pos_db, &mospf_db, list) {
         for (int i = 0; i < pos_db->nadv; i++) {
-            fprintf(stdout, IP_FMT"\t"IP_FMT"\t"
-                            IP_FMT"\t"IP_FMT"\n",
+            fprintf(stdout, IP_FMT"\t"
+                            IP_FMT"\t"
+                            IP_FMT"\t"
+                            IP_FMT"\n",
                     HOST_IP_FMT_STR(pos_db->rid),
                     HOST_IP_FMT_STR(pos_db->array[i].network),
                     HOST_IP_FMT_STR(pos_db->array[i].mask),
@@ -33,9 +38,9 @@ void dump_mospf_db(void *param) {
     }
 }
 
-int rid_to_index(const u32 verList[], int size, u32 rid) {
+int net_to_index(const u32 *verList, int size, u32 net) {
     for (int i = 0; i < size; ++i) {
-        if (verList[i] == rid) return i;
+        if (verList[i] == net) return i;
     }
     return -1;
 }
@@ -48,23 +53,26 @@ VerRes_t find_vertices(int num) {
     ret.verList = (u32 *) malloc(num * sizeof(u32));
     memset(ret.verList, 0, num * sizeof(u32));
 
-    ret.size = 0; // mark head's size
+    // mark head's size
+    ret.size = 0;
 
+    // add all local iface network
+    iface_info_t *pos_if;
+    list_for_each_entry(pos_if, &instance->iface_list, list) {
+        u32 dest = pos_if->ip & pos_if->mask;
+        if (net_to_index(ret.verList, ret.size, dest) == -1)
+            ret.verList[ret.size++] = dest;
+    }
+
+    // add all lsa network
     mospf_db_entry_t *pos_db;
     list_for_each_entry(pos_db, &mospf_db, list) {
-        int res_to_lsu =
-                rid_to_index(ret.verList, ret.size, pos_db->rid);
-        if (res_to_lsu == -1)
-            ret.verList[ret.size++] = pos_db->rid;
-
         struct mospf_lsa *mLsa = pos_db->array;
         for (int i = 0; i < pos_db->nadv; ++i) {
-            int res_to_lsa =
-                    rid_to_index(ret.verList, ret.size, mLsa->rid);
-            if (res_to_lsa == -1) {
-                ret.verList[ret.size++] = mLsa->rid;
-                mLsa++;
-            }
+            u32 dest = mLsa->network & mLsa->mask;
+            if (net_to_index(ret.verList, ret.size, dest) == -1)
+                ret.verList[ret.size++] = dest;
+            mLsa++;
         }
     }
     return ret;
@@ -77,9 +85,9 @@ void *create_graph(u32 *verList, int size) {
     memset(graph, 0, sizeof(char) * size * size);
     mospf_db_entry_t *pos_db;
     list_for_each_entry(pos_db, &mospf_db, list) {
-        int v0 = rid_to_index(verList, size, pos_db->rid), v1;
+        int v0 = net_to_index(verList, size, pos_db->rid), v1;
         for (int i = 0; i < pos_db->nadv; ++i) {
-            v1 = rid_to_index(verList, size, pos_db->array[i].rid);
+            v1 = net_to_index(verList, size, pos_db->array[i].rid);
             graph[v0][v1] = graph[v1][v0] = 1;
         }
     }

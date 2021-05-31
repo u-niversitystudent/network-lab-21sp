@@ -8,7 +8,7 @@
 #include "rtable.h"
 
 
-#define GRAPH_SIZE 6
+#define GRAPH_SIZE 4
 
 extern struct list_head mospf_db;
 
@@ -30,7 +30,7 @@ void init_mospf_db();
 
 void dump_mospf_db(void *param);
 
-int net_to_index(const u32 *verList, int size, u32 net);
+int rid_to_index(const u32 *verList, int size, u32 rid);
 
 VerRes_t find_vertices(int num);
 

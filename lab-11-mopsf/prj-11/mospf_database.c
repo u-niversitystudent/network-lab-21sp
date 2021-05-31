@@ -38,9 +38,9 @@ void dump_mospf_db(void *param) {
     }
 }
 
-int net_to_index(const u32 *verList, int size, u32 net) {
+int rid_to_index(const u32 *verList, int size, u32 rid) {
     for (int i = 0; i < size; ++i) {
-        if (verList[i] == net) return i;
+        if (verList[i] == rid) return i;
     }
     return -1;
 }
@@ -56,41 +56,37 @@ VerRes_t find_vertices(int num) {
     // mark head's size
     ret.size = 0;
 
-    // add all local iface network
-    iface_info_t *pos_if;
-    list_for_each_entry(pos_if, &instance->iface_list, list) {
-        u32 dest = pos_if->ip & pos_if->mask;
-        if (net_to_index(ret.verList, ret.size, dest) == -1)
-            ret.verList[ret.size++] = dest;
-    }
+    // add current instance
+    ret.verList[ret.size++] = instance->router_id;
 
-    // add all lsa network
+    // add all lsu network
     mospf_db_entry_t *pos_db;
     list_for_each_entry(pos_db, &mospf_db, list) {
-        struct mospf_lsa *mLsa = pos_db->array;
-        for (int i = 0; i < pos_db->nadv; ++i) {
-            u32 dest = mLsa->network & mLsa->mask;
-            if (net_to_index(ret.verList, ret.size, dest) == -1)
-                ret.verList[ret.size++] = dest;
-            mLsa++;
-        }
+        u32 rid = pos_db->rid;
+        if (rid_to_index(ret.verList, ret.size, rid) == -1)
+            ret.verList[ret.size++] = rid;
     }
     return ret;
 }
 
 // create graph for vertices
 void *create_graph(u32 *verList, int size) {
-    int (*graph)[size] = (int (*)[size]) malloc(
-            sizeof(int) * size * size);
+    int (*graph)[size] =
+            (int (*)[size]) malloc(sizeof(int) * size * size);
     memset(graph, 0, sizeof(char) * size * size);
+
     mospf_db_entry_t *pos_db;
     list_for_each_entry(pos_db, &mospf_db, list) {
-        int v0 = net_to_index(verList, size, pos_db->rid), v1;
+        int v0, v1;
+        v0 = rid_to_index(verList, size, pos_db->rid);
         for (int i = 0; i < pos_db->nadv; ++i) {
-            v1 = net_to_index(verList, size, pos_db->array[i].rid);
+            u32 dest1 = pos_db->array[i].network &
+                        pos_db->array->mask;
+            v1 = rid_to_index(verList, size, dest1);
             graph[v0][v1] = graph[v1][v0] = 1;
         }
     }
+
     return (void *) graph;
 }
 

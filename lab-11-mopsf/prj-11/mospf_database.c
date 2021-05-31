@@ -130,38 +130,6 @@ void dij(void *in_graph, int dist[], int visited[], int prev[], int num) {
     }
 }
 
-int if_rt_should_not_exist(rt_entry_t *rt) {
-    iface_info_t *pos_if;
-    mospf_nbr_t *pos_nbr;
-    // 1=should not
-    if (rt->gw != 0 ||
-        rt->flags == RT_CLC)
-        return 0;
-
-    list_for_each_entry(pos_if, &instance->iface_list, list) {
-        if (strcmp(pos_if->name, rt->if_name) == 0) {
-            list_for_each_entry(pos_nbr, &pos_if->nbr_list, list) {
-                if ((pos_nbr->nbr_ip & pos_nbr->nbr_mask) ==
-                    (rt->dest & rt->mask))
-                    return 0;
-            }
-        }
-    }
-    return 1;
-}
-
-void clear_rtable_reserve() {
-    rt_entry_t *pos_rt, *q_rt;
-    list_for_each_entry_safe(pos_rt, q_rt, &rtable, list) {
-        // [RT_CLC] clear ordinary items that added by calc
-        // [RT_RSV] clear items load from kernel
-        if (pos_rt->flags == RT_CLC ||
-            if_rt_should_not_exist(pos_rt)) {
-            remove_rt_entry(pos_rt);
-        }
-    }
-}
-
 rt_entry_t *dest_mask_to_rtable(u32 dest, u32 mask) {
     rt_entry_t *pos_rt;
     list_for_each_entry(pos_rt, &rtable, list) {
@@ -224,7 +192,6 @@ void update_rtable_by_db(int max_num) {
     /* clear original rtable first */
     clear_rtable();
     load_rtable_from_kernel();
-    // clear_rtable_reserve();
 
 #ifdef TEST_CLEAR_RTABLE
     fprintf(stdout, "--------------------------------------\n"

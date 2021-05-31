@@ -16,9 +16,10 @@ void init_mospf_db() {
 
 void dump_mospf_db(void *param) {
     mospf_db_entry_t *pos_db;
-    fprintf(stdout, "MOSPF Database:\n");
-    fprintf(stdout, "Router ID\tNbr Network\tNbr Mask\tNbr RID\n");
-    fprintf(stdout, "--------------------------------------\n");
+    fprintf(stdout, "--------------------------------------\n"
+                    "MOSPF Database:\n"
+                    "Router ID\tNbr Network\tNbr Mask\tNbr RID\n"
+                    "--------------------------------------\n");
     list_for_each_entry(pos_db, &mospf_db, list) {
         for (int i = 0; i < pos_db->nadv; i++) {
             fprintf(stdout,
@@ -30,6 +31,7 @@ void dump_mospf_db(void *param) {
             );
         }
     }
+    fprintf(stdout, "--------------------------------------\n");
 }
 
 int rid_to_index(const u32 *verList, int size, u32 rid) {
@@ -177,13 +179,15 @@ void update_rtable_by_db(int max_num) {
     }
 #endif
 
-
     /* clear original rtable first */
+
     clear_rtable_reserve();
+
+#ifdef TEST_CLEAR_RTABLE
     print_rtable();
+#endif
 
     /* update rtable */
-    // hint: network, mask, gw, iface, flag[cal]
 
     mospf_db_entry_t *pos_db;
     list_for_each_entry(pos_db, &mospf_db, list) {
@@ -194,10 +198,14 @@ void update_rtable_by_db(int max_num) {
                     now->network, now->mask);
             if (!renew_rt) {
                 // new entry should be added
+                int index;
 
-                int index = (now->rid == 0)
-                            ? rid_to_index(res.verList, num, pos_db->rid)
-                            : rid_to_index(res.verList, num, now->rid);
+                if (now->rid == 0)
+                    index = rid_to_index(res.verList, num, pos_db->rid);
+                else
+                    index = rid_to_index(res.verList, num, now->rid);
+
+                if (index == -1) break;
 
                 while (dist[index] > 1 && prev[index] >= 0)
                     index = prev[index];

@@ -57,8 +57,9 @@ void clear_rtable_reserve() {
 
 void print_rtable() {
     // Print the route records
-    fprintf(stdout, "Routing Table:\n");
-    fprintf(stdout, "RTable dest\tRTable mask\t"
+    fprintf(stdout, "--------------------------------------\n"
+                    "Routing Table:\n"
+                    "RTable dest\tRTable mask\t"
                     "RTable gw\tRTable if_name\n");
     fprintf(stdout, "--------------------------------------\n");
     rt_entry_t *entry = NULL;

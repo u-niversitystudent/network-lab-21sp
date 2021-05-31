@@ -9,7 +9,7 @@ CFLAGS = -g -Wall -Wno-unused-variable -Wno-unused-function -Iinclude
 LDFLAGS = -L.
 
 # marco definitions for tests
-#-DTEST_FIND_VERTICES -DTEST_CREATE_GRAPH -DTEST_DIJ_CALC
+#-DTEST_FIND_VERTICES -DTEST_CREATE_GRAPH -DTEST_DIJ_CALC -DTEST_CLEAR_RTABLE
 DEFS =
 CFLAGS += $(DEFS)
 

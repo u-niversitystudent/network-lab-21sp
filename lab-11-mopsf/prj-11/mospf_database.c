@@ -134,22 +134,16 @@ int if_rt_should_not_exist(rt_entry_t *rt) {
     iface_info_t *pos_if;
     mospf_nbr_t *pos_nbr;
     // 1=should not
-    u32 gw = rt->gw;
-    if (gw != 0) {
-        list_for_each_entry(pos_if, &instance->iface_list, list) {
+    if (rt->gw != 0 ||
+        rt->flags == RT_CLC)
+        return 0;
+
+    list_for_each_entry(pos_if, &instance->iface_list, list) {
+        if (strcmp(pos_if->name, rt->if_name) == 0) {
             list_for_each_entry(pos_nbr, &pos_if->nbr_list, list) {
-                if (pos_nbr->nbr_ip == gw) return 0;
-            }
-        }
-    } else {
-        list_for_each_entry(pos_if, &instance->iface_list, list) {
-            if (strcmp(pos_if->name, rt->if_name) == 0) {
-                list_for_each_entry(
-                        pos_nbr, &pos_if->nbr_list, list) {
-                    if ((pos_nbr->nbr_ip & pos_nbr->nbr_mask) ==
-                        (rt->dest & rt->mask))
-                        return 0;
-                }
+                if ((pos_nbr->nbr_ip & pos_nbr->nbr_mask) ==
+                    (rt->dest & rt->mask))
+                    return 0;
             }
         }
     }
@@ -228,8 +222,9 @@ void update_rtable_by_db(int max_num) {
 #endif
 
     /* clear original rtable first */
-
-    clear_rtable_reserve();
+    clear_rtable();
+    load_rtable_from_kernel();
+    // clear_rtable_reserve();
 
 #ifdef TEST_CLEAR_RTABLE
     fprintf(stdout, "--------------------------------------\n"

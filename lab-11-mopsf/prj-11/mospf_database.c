@@ -80,9 +80,7 @@ void *create_graph(u32 *verList, int size) {
         int v0, v1;
         v0 = rid_to_index(verList, size, pos_db->rid);
         for (int i = 0; i < pos_db->nadv; ++i) {
-            u32 dest1 = pos_db->array[i].network &
-                        pos_db->array->mask;
-            v1 = rid_to_index(verList, size, dest1);
+            v1 = rid_to_index(verList, size, pos_db->array[i].rid);
             graph[v0][v1] = graph[v1][v0] = 1;
         }
     }

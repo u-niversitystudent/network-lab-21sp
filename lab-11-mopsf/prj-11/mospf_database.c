@@ -80,7 +80,11 @@ void *create_graph(u32 *verList, int size) {
         int v0, v1;
         v0 = rid_to_index(verList, size, pos_db->rid);
         for (int i = 0; i < pos_db->nadv; ++i) {
-            v1 = rid_to_index(verList, size, pos_db->array[i].rid);
+            u32 rid1 = pos_db->array[i].rid;
+            if (rid1 == 0) continue;
+
+            v1 = rid_to_index(verList, size, rid1);
+            if (v1 == -1) continue;
             graph[v0][v1] = graph[v1][v0] = 1;
         }
     }
@@ -99,6 +103,28 @@ int min_dist(const int dist[], const int visited[], int num) {
         };
     }
     return min_index;
+}
+
+void dij(void *in_graph, int dist[], int visited[], int prev[], int num) {
+    for (int i = 0; i < num; ++i) dist[i] = INT8_MAX;
+    memset(visited, 0, sizeof(int) * num);
+    memset(prev, (u8) -1, sizeof(int) * num);
+    int (*graph)[num] = in_graph;
+
+    dist[0] = 0;
+    for (int i = 0; i < num; ++i) {
+        int next = min_dist(dist, visited, num);
+        visited[next] = 1;
+
+        for (int j = 0; j < num; ++j) {
+            if (visited[j] == 0
+                && graph[next][j] > 0
+                && dist[next] + graph[next][j] < dist[j]) {
+                dist[j] = dist[next] + graph[next][j];
+                prev[j] = next;
+            }
+        }
+    }
 }
 
 iface_info_t *rid_to_iface(u32 rid) {
@@ -144,32 +170,40 @@ rt_entry_t *dest_mask_to_rtable(u32 dest, u32 mask) {
     return NULL;
 }
 
-void dij_algo_update_rtable(int num) {
+void dij_algo_update_rtable(int max_num) {
 
-    /* dijkstra algorithm on $(range) points */
+    /* load vertices list */
 
-    VerRes_t res = find_vertices(num);
+    VerRes_t res = find_vertices(max_num);
+    int num = res.size;
 
 #ifdef TEST_FIND_VERTICES
-    printf("test find_vertices\n");
+    printf("test find_vertices num=%d\n", num);
     for (int i = 0; i < num; ++i) {
         printf("verList[%d]: "IP_FMT"\n",
                i, HOST_IP_FMT_STR(res.verList[i]));
     }
 #endif
 
+    /* prepare graph for dij */
+
     int(*graph)[num] = create_graph(res.verList, num);
 
 #ifdef TEST_CREATE_GRAPH
-    printf("test create_graph\n");
+    printf("test create_graph num=%d\n", num);
     for (int i = 0; i < num; ++i) {
         for (int j = 0; j < num; ++j) {
-            printf("%d ", graph[i][j]);
+            printf("%2d ", graph[i][j]);
         }
         printf("\n");
     }
     printf("\n");
 #endif
+
+    /* dijkstra algorithm on $(range) points */
+
+//    int dist[num], visited[num], prev[num];
+//    dij(graph, dist, visited, prev, num);
 
     int dist[num], visited[num], prev[num];
     for (int i = 0; i < num; ++i) dist[i] = INT8_MAX;
@@ -202,27 +236,7 @@ void dij_algo_update_rtable(int num) {
 #endif
 
     /* update rtable */
-//    for (int i = 0; i < num; ++i) {
-//        //  rid => network, mask, gw, iface, flag[cal]
-//        if (dist[i] == INT8_MAX)continue;
-//
-//        mospf_nbr_t *resNextHop = rid_to_nbr(prev[i]);
-//        iface_info_t *resIface = rid_to_iface(prev[i]);
-//        u32 dest = res.verList[i],
-//                mask = resNextHop->nbr_mask,
-//                gw = resNextHop->nbr_ip;
-//
-//        rt_entry_t *old_rt = dest_mask_to_rtable(dest, mask);
-//        if(!old_rt) {
-//            rt_entry_t *new_rt = new_rt_entry(
-//                    dest, mask, gw, resIface, RT_CLC);
-//            add_rt_entry(new_rt);
-//        } else if (old_rt->flags==RT_CLC){
-//            old_rt->dest=dest;
-//            old_rt->mask=mask;
-//            old_rt->gw=gw;
-//            old_rt->iface=resIface;
-//            memcpy(old_rt->if_name, resIface->name, sizeof(old_rt->if_name));
-//        }
-//    }
+    // hint: network, mask, gw, iface, flag[cal]
+
+
 }

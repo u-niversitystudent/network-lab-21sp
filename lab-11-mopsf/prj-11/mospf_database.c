@@ -31,7 +31,6 @@ void dump_mospf_db(void *param) {
             );
         }
     }
-    fprintf(stdout, "--------------------------------------\n");
 }
 
 int rid_to_index(const u32 *verList, int size, u32 rid) {
@@ -58,8 +57,16 @@ VerRes_t find_vertices(int num) {
     mospf_db_entry_t *pos_db;
     list_for_each_entry(pos_db, &mospf_db, list) {
         u32 rid = pos_db->rid;
+        if (rid == 0) continue;
         if (rid_to_index(ret.verList, ret.size, rid) == -1)
             ret.verList[ret.size++] = rid;
+
+        for (int i = 0; i < pos_db->nadv; ++i) {
+            rid = pos_db->array[i].rid;
+            if (rid == 0) continue;
+            if (rid_to_index(ret.verList, ret.size, rid) == -1)
+                ret.verList[ret.size++] = rid;
+        }
     }
     return ret;
 }
@@ -142,7 +149,8 @@ void update_rtable_by_db(int max_num) {
     int num = res.size;
 
 #ifdef TEST_FIND_VERTICES
-    printf("test find_vertices num=%d\n", num);
+    fprintf(stdout, "--------------------------------------\n"
+                    "test find_vertices num=%d\n", num);
     for (int i = 0; i < num; ++i) {
         printf("verList[%d]: "IP_FMT"\n",
                i, HOST_IP_FMT_STR(res.verList[i]));
@@ -154,14 +162,14 @@ void update_rtable_by_db(int max_num) {
     int(*graph)[num] = create_graph(res.verList, num);
 
 #ifdef TEST_CREATE_GRAPH
-    printf("test create_graph num=%d\n", num);
+    fprintf(stdout, "--------------------------------------\n"
+                    "test create_graph num=%d\n", num);
     for (int i = 0; i < num; ++i) {
         for (int j = 0; j < num; ++j) {
             printf("%2d ", graph[i][j]);
         }
         printf("\n");
     }
-    printf("\n");
 #endif
 
     /* dijkstra algorithm on $(range) points */
@@ -170,10 +178,11 @@ void update_rtable_by_db(int max_num) {
     dij(graph, dist, visited, prev, num);
 
 #ifdef TEST_DIJ_CALC
-    printf("test dij's calc num=%d\n"
-           "dist\t"
-           "visited\t"
-           "prev\n", num);
+    fprintf(stdout, "--------------------------------------\n"
+                    "test dij's calc num=%d\n"
+                    "dist\t"
+                    "visited\t"
+                    "prev\n", num);
     for (int i = 0; i < num; ++i) {
         printf("%d\t%d\t%d\n", dist[i], visited[i], prev[i]);
     }
@@ -181,9 +190,32 @@ void update_rtable_by_db(int max_num) {
 
     /* clear original rtable first */
 
+    // clear ordinary items that added by calc [flag=RT_CLC]
     clear_rtable_reserve();
+    // clear out-dated reserved items
+    rt_entry_t *pos_rt, *q_rt;
+    list_for_each_entry_safe(pos_rt, q_rt, &rtable, list){
+        u32 next_hop = pos_rt->gw;
+        int flag_if_find = 0;
+        iface_info_t *pos_if;
+        list_for_each_entry(pos_if, &instance->iface_list, list) {
+            mospf_nbr_t *pos_nbr;
+            list_for_each_entry(pos_nbr, &pos_if->nbr_list, list){
+                if(pos_nbr->nbr_ip==next_hop){
+                    flag_if_find = 1;
+                    break;
+                }
+            }
+            if (flag_if_find) break;
+        }
+        if (flag_if_find) continue;
+        // delete current item
+        remove_rt_entry(pos_rt);
+    }
 
 #ifdef TEST_CLEAR_RTABLE
+    fprintf(stdout, "--------------------------------------\n"
+                    "test clear_rtable num=%d\n");
     print_rtable();
 #endif
 

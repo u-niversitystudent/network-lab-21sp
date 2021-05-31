@@ -220,11 +220,11 @@ void *checking_database_thread(void *param) {
             free(pos_db);
         }
 
-         dump_mospf_db(NULL);
+        dump_mospf_db(NULL);
 
         // TODO: update route table
         update_rtable_by_db(GRAPH_SIZE);
-         print_rtable();
+        print_rtable();
 
         pthread_mutex_unlock(&mospf_lock);
 

@@ -50,8 +50,7 @@ void clear_rtable_reserve() {
     rt_entry_t *pos_rt, *q_rt;
     list_for_each_entry_safe(pos_rt, q_rt, &rtable, list) {
         if (pos_rt->flags == RT_RSV) continue;
-        list_delete_entry(&pos_rt->list);
-        free(pos_rt);
+        remove_rt_entry(pos_rt);
     }
 }
 
@@ -70,5 +69,4 @@ void print_rtable() {
                 HOST_IP_FMT_STR(entry->gw),
                 entry->if_name);
     }
-    fprintf(stdout, "--------------------------------------\n");
 }

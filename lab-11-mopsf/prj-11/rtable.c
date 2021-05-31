@@ -11,7 +11,8 @@ void init_rtable() {
     init_list_head(&rtable);
 }
 
-rt_entry_t *new_rt_entry(u32 dest, u32 mask, u32 gw, iface_info_t *iface) {
+rt_entry_t *new_rt_entry(
+        u32 dest, u32 mask, u32 gw, iface_info_t *iface, int flag) {
     rt_entry_t *entry = malloc(sizeof(*entry));
     memset(entry, 0, sizeof(*entry));
 
@@ -20,6 +21,7 @@ rt_entry_t *new_rt_entry(u32 dest, u32 mask, u32 gw, iface_info_t *iface) {
     entry->mask = mask;
     entry->gw = gw;
     entry->iface = iface;
+    entry->flags = flag;
     strcpy(entry->if_name, iface->name);
 
     return entry;

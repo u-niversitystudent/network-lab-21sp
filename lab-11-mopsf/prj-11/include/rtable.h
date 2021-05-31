@@ -6,6 +6,9 @@
 
 #include "list.h"
 
+#define RT_RSV 0
+#define RT_CLC 1
+
 // structure of ip forwarding table
 // note: 1, the table supports only ipv4 address;
 // 		 2, addresses are stored in host byte order.
@@ -35,7 +38,8 @@ void remove_rt_entry(rt_entry_t *entry);
 
 void print_rtable();
 
-rt_entry_t *new_rt_entry(u32 dest, u32 mask, u32 gw, iface_info_t *iface);
+rt_entry_t *new_rt_entry(
+        u32 dest, u32 mask, u32 gw, iface_info_t *iface, int flag);
 
 rt_entry_t *longest_prefix_match(u32 ip);
 

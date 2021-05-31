@@ -8,6 +8,10 @@ LD = gcc
 CFLAGS = -g -Wall -Wno-unused-variable -Wno-unused-function -Iinclude
 LDFLAGS = -L.
 
+# marco definitions for tests
+DEFS = -DTEST_FIND_VERTICES
+CFLAGS += $(DEFS)
+
 LIBS = -lpthread
 
 HDRS = ./include/*.h

@@ -9,8 +9,8 @@ typedef struct {
     struct list_head list;
     u32 nbr_id;            // neighbor ID
     u32 nbr_ip;            // neighbor IP
-    u32 nbr_mask;        // neighbor mask
-    u8 alive;            // alive for #(seconds)
+    u32 nbr_mask;          // neighbor mask
+    u8 alive;              // alive for #(seconds)
 } mospf_nbr_t;
 
 #endif

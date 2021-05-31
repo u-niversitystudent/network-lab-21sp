@@ -21,9 +21,9 @@ typedef struct {
     char buf[ROUTE_BATCH_SIZE];
 } route_request;
 
-// XXX: All the functions in this file should be treated as a blackbox. You do not 
-// need to understand how it works, but only trust it will process like the function
-// name indicates.
+// XXX: All the functions in this file should be treated as a blackbox.
+// You do not need to understand how it works, but only trust it will
+// process like the function name indicates.
 
 static void if_index_to_name(int if_index, char *if_name) {
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -155,7 +155,7 @@ static int parse_routing_info(char *buf, int len) {
         iface_info_t *iface = if_name_to_iface(if_name);
         if (iface) {
             // the desired interface
-            rt_entry_t *entry = new_rt_entry(dest, mask, gw, iface);
+            rt_entry_t *entry = new_rt_entry(dest, mask, gw, iface, RT_RSV);
             add_rt_entry(entry);
 
             n += 1;

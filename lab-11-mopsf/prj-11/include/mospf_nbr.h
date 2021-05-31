@@ -1,5 +1,5 @@
-#ifndef __NOSPF_NBR_H__
-#define __NOSPF_NBR_H__
+#ifndef __MOSPF_NBR_H__
+#define __MOSPF_NBR_H__
 
 #include "base.h"
 #include "types.h"

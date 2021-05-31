@@ -38,6 +38,8 @@ void *create_graph(u32 *verList, int size);
 
 int min_dist(const int dist[], const int visited[], int num);
 
+void dij(void *in_graph, int dist[], int visited[], int prev[], int num);
+
 iface_info_t *rid_to_iface(u32 rid);
 
 rt_entry_t *dest_mask_to_rtable(u32 dest, u32 mask);

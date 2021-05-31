@@ -106,10 +106,11 @@ int min_dist(const int dist[], const int visited[], int num) {
 }
 
 void dij(void *in_graph, int dist[], int visited[], int prev[], int num) {
+    int (*graph)[num] = in_graph;
+
     for (int i = 0; i < num; ++i) dist[i] = INT8_MAX;
     memset(visited, 0, sizeof(int) * num);
     memset(prev, (u8) -1, sizeof(int) * num);
-    int (*graph)[num] = in_graph;
 
     dist[0] = 0;
     for (int i = 0; i < num; ++i) {
@@ -202,28 +203,8 @@ void dij_algo_update_rtable(int max_num) {
 
     /* dijkstra algorithm on $(range) points */
 
-//    int dist[num], visited[num], prev[num];
-//    dij(graph, dist, visited, prev, num);
-
     int dist[num], visited[num], prev[num];
-    for (int i = 0; i < num; ++i) dist[i] = INT8_MAX;
-    memset(visited, 0, sizeof(int) * num);
-    memset(prev, (u8) -1, sizeof(int) * num);
-
-    dist[0] = 0;
-    for (int i = 0; i < num; ++i) {
-        int next = min_dist(dist, visited, num);
-        visited[next] = 1;
-
-        for (int j = 0; j < num; ++j) {
-            if (visited[j] == 0
-                && graph[next][j] > 0
-                && dist[next] + graph[next][j] < dist[j]) {
-                dist[j] = dist[next] + graph[next][j];
-                prev[j] = next;
-            }
-        }
-    }
+    dij(graph, dist, visited, prev, num);
 
 #ifdef TEST_DIJ_CALC
     printf("test dij's calc num=%d\n"

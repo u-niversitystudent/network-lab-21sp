@@ -40,10 +40,8 @@ int min_dist(const int dist[], const int visited[], int num);
 
 void dij(void *in_graph, int dist[], int visited[], int prev[], int num);
 
-iface_info_t *rid_to_iface(u32 rid);
-
 rt_entry_t *dest_mask_to_rtable(u32 dest, u32 mask);
 
-void dij_algo_update_rtable(int num);
+void update_rtable_by_db(int num);
 
 #endif

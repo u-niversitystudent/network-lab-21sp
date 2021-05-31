@@ -17,18 +17,12 @@ void init_mospf_db() {
 void dump_mospf_db(void *param) {
     mospf_db_entry_t *pos_db;
     fprintf(stdout, "MOSPF Database:\n");
-    fprintf(stdout, "Router ID\t"
-                    "Nbr Network\t"
-                    "Nbr Mask\t"
-                    "Nbr RID\n");
+    fprintf(stdout, "Router ID\tNbr Network\tNbr Mask\tNbr RID\n");
     fprintf(stdout, "--------------------------------------\n");
-    list_for_each_entry(
-            pos_db, &mospf_db, list) {
+    list_for_each_entry(pos_db, &mospf_db, list) {
         for (int i = 0; i < pos_db->nadv; i++) {
-            fprintf(stdout, IP_FMT"\t"
-                            IP_FMT"\t"
-                            IP_FMT"\t"
-                            IP_FMT"\n",
+            fprintf(stdout,
+                    IP_FMT"\t"IP_FMT"\t"IP_FMT"\t"IP_FMT"\n",
                     HOST_IP_FMT_STR(pos_db->rid),
                     HOST_IP_FMT_STR(pos_db->array[i].network),
                     HOST_IP_FMT_STR(pos_db->array[i].mask),
@@ -45,9 +39,8 @@ int rid_to_index(const u32 *verList, int size, u32 rid) {
     return -1;
 }
 
-
+// find vertices for the graph, from mospf_db
 VerRes_t find_vertices(int num) {
-    // find vertices for the graph, from mospf_db
     VerRes_t ret;
 
     ret.verList = (u32 *) malloc(num * sizeof(u32));
@@ -92,8 +85,8 @@ void *create_graph(u32 *verList, int size) {
     return (void *) graph;
 }
 
+// tool for dijkstra algorithm
 int min_dist(const int dist[], const int visited[], int num) {
-    // tool for dijkstra algorithm
     int min = INT8_MAX, min_index = -1;
     for (int i = 0; i < num; ++i) {
         if (visited[i] == 1) continue;
@@ -128,50 +121,18 @@ void dij(void *in_graph, int dist[], int visited[], int prev[], int num) {
     }
 }
 
-iface_info_t *rid_to_iface(u32 rid) {
-    iface_info_t *pos_if;
-    int if_found = 0;
-
-    list_for_each_entry(pos_if, &instance->iface_list, list) {
-        mospf_nbr_t *pos_nbr;
-        list_for_each_entry(pos_nbr, &pos_if->nbr_list, list) {
-            if (rid == pos_nbr->nbr_id) {
-                if_found = 1;
-                break;
-            }
-        }
-        if (if_found == 1) break;
-    }
-
-    if (if_found == 1) return pos_if;
-    else return NULL;
-}
-
-mospf_nbr_t *rid_to_nbr(u32 rid) {
-    iface_info_t *pos_if;
-    mospf_nbr_t *pos_nbr;
-    list_for_each_entry(pos_if, &instance->iface_list, list) {
-        list_for_each_entry(
-                pos_nbr, &pos_if->nbr_list, list) {
-            if (rid == pos_nbr->nbr_id) {
-                return pos_nbr;
-            }
-        }
-    }
-    return NULL;
-}
-
 rt_entry_t *dest_mask_to_rtable(u32 dest, u32 mask) {
     rt_entry_t *pos_rt;
     list_for_each_entry(pos_rt, &rtable, list) {
-        if ((pos_rt->dest & pos_rt->mask) == (dest & mask)) {
-            return pos_rt;
-        }
+        if (pos_rt->mask == mask)
+            if (pos_rt->dest == dest ||
+                (pos_rt->dest & pos_rt->mask) == (dest & mask))
+                return pos_rt;
     }
     return NULL;
 }
 
-void dij_algo_update_rtable(int max_num) {
+void update_rtable_by_db(int max_num) {
 
     /* load vertices list */
 
@@ -216,8 +177,59 @@ void dij_algo_update_rtable(int max_num) {
     }
 #endif
 
+
+    /* clear original rtable first */
+    clear_rtable_reserve();
+    print_rtable();
+
     /* update rtable */
     // hint: network, mask, gw, iface, flag[cal]
 
+    mospf_db_entry_t *pos_db;
+    list_for_each_entry(pos_db, &mospf_db, list) {
+        for (int i = 0; i < pos_db->nadv; i++) {
+            // network, mask, rid
+            struct mospf_lsa *now = &pos_db->array[i];
+            rt_entry_t *renew_rt = dest_mask_to_rtable(
+                    now->network, now->mask);
+            if (!renew_rt) {
+                // new entry should be added
+
+                int index = (now->rid == 0)
+                            ? rid_to_index(res.verList, num, pos_db->rid)
+                            : rid_to_index(res.verList, num, now->rid);
+
+                while (dist[index] > 1 && prev[index] >= 0)
+                    index = prev[index];
+
+                u32 next_hop_rid = res.verList[index];
+
+                iface_info_t *pos_if;
+                mospf_nbr_t *pos_nbr;
+                int flag_search_fi = 0;
+                list_for_each_entry(
+                        pos_if, &instance->iface_list, list) {
+                    list_for_each_entry(
+                            pos_nbr, &pos_if->nbr_list, list) {
+                        if (pos_nbr->nbr_id == next_hop_rid) {
+                            flag_search_fi = 1;
+                            break;
+                        }
+                    }
+                    if (flag_search_fi) break;
+                }
+
+                u32 gw = pos_nbr->nbr_ip;
+
+                renew_rt = new_rt_entry(
+                        pos_db->array[i].network, // dest
+                        pos_db->array[i].mask,    // mask
+                        gw,                       // gw
+                        pos_if,                   // iface
+                        RT_CLC);
+                add_rt_entry(renew_rt);
+            }
+        }
+    }
 
 }

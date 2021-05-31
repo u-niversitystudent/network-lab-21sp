@@ -32,6 +32,8 @@ void load_static_rtable();
 
 void clear_rtable();
 
+void clear_rtable_reserve();
+
 void add_rt_entry(rt_entry_t *entry);
 
 void remove_rt_entry(rt_entry_t *entry);

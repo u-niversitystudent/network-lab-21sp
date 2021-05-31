@@ -10,7 +10,7 @@ LDFLAGS = -L.
 
 # marco definitions for tests
 #-DTEST_FIND_VERTICES -DTEST_CREATE_GRAPH -DTEST_DIJ_CALC
-DEFS = -DTEST_DIJ_CALC
+DEFS =
 CFLAGS += $(DEFS)
 
 LIBS = -lpthread

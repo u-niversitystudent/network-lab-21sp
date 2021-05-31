@@ -46,17 +46,27 @@ void clear_rtable() {
     }
 }
 
+void clear_rtable_reserve() {
+    rt_entry_t *pos_rt, *q_rt;
+    list_for_each_entry_safe(pos_rt, q_rt, &rtable, list) {
+        if (pos_rt->flags == RT_RSV) continue;
+        list_delete_entry(&pos_rt->list);
+        free(pos_rt);
+    }
+}
+
 void print_rtable() {
     // Print the route records
     fprintf(stdout, "Routing Table:\n");
-    fprintf(stdout, "dest\tmask\tgateway\tif_name\n");
+    fprintf(stdout, "RTable dest\tRTable mask\t"
+                    "RTable gw\tRTable if_name\n");
     fprintf(stdout, "--------------------------------------\n");
     rt_entry_t *entry = NULL;
     list_for_each_entry(entry, &rtable, list) {
-        fprintf(stdout, IP_FMT"\t"IP_FMT"\t"IP_FMT"\t%s\n", \
-                HOST_IP_FMT_STR(entry->dest), \
-                HOST_IP_FMT_STR(entry->mask), \
-                HOST_IP_FMT_STR(entry->gw), \
+        fprintf(stdout, IP_FMT"\t"IP_FMT"\t"IP_FMT"\t%s\n",
+                HOST_IP_FMT_STR(entry->dest),
+                HOST_IP_FMT_STR(entry->mask),
+                HOST_IP_FMT_STR(entry->gw),
                 entry->if_name);
     }
     fprintf(stdout, "--------------------------------------\n");

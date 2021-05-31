@@ -52,7 +52,7 @@ struct iphdr {
 // lazy way to print ip address 'ip' (a u32 variable) as follows:
 // fprintf(stdout, "the ip address is "IP_FMT".\n", HOST_IP_FMT_STR(ip));
 
-#define IP_FMT    "%hhu.%hhu.%hhu.%hhu"
+#define IP_FMT    "%2hhu.%hhu.%2hhu.%hhu"
 #define LE_IP_FMT_STR(ip) ((u8 *)&(ip))[3], \
                           ((u8 *)&(ip))[2], \
                           ((u8 *)&(ip))[1], \

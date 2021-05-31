@@ -180,11 +180,12 @@ void update_rtable_by_db(int max_num) {
 #ifdef TEST_DIJ_CALC
     fprintf(stdout, "--------------------------------------\n"
                     "test dij's calc num=%d\n"
-                    "dist\t"
-                    "visited\t"
-                    "prev\n", num);
+                    "i\t"
+                    "dist[i]\t"
+                    "v[i]\t"
+                    "prev[i]\n", num);
     for (int i = 0; i < num; ++i) {
-        printf("%d\t%d\t%d\n", dist[i], visited[i], prev[i]);
+        printf("%d\t%d\t%d\t%d\n", i, dist[i], visited[i], prev[i]);
     }
 #endif
 
@@ -192,26 +193,6 @@ void update_rtable_by_db(int max_num) {
 
     // clear ordinary items that added by calc [flag=RT_CLC]
     clear_rtable_reserve();
-    // clear out-dated reserved items
-    rt_entry_t *pos_rt, *q_rt;
-    list_for_each_entry_safe(pos_rt, q_rt, &rtable, list){
-        u32 next_hop = pos_rt->gw;
-        int flag_if_find = 0;
-        iface_info_t *pos_if;
-        list_for_each_entry(pos_if, &instance->iface_list, list) {
-            mospf_nbr_t *pos_nbr;
-            list_for_each_entry(pos_nbr, &pos_if->nbr_list, list){
-                if(pos_nbr->nbr_ip==next_hop){
-                    flag_if_find = 1;
-                    break;
-                }
-            }
-            if (flag_if_find) break;
-        }
-        if (flag_if_find) continue;
-        // delete current item
-        remove_rt_entry(pos_rt);
-    }
 
 #ifdef TEST_CLEAR_RTABLE
     fprintf(stdout, "--------------------------------------\n"
@@ -226,8 +207,8 @@ void update_rtable_by_db(int max_num) {
         for (int i = 0; i < pos_db->nadv; i++) {
             // network, mask, rid
             struct mospf_lsa *now = &pos_db->array[i];
-            rt_entry_t *renew_rt = dest_mask_to_rtable(
-                    now->network, now->mask);
+            rt_entry_t *renew_rt =
+                    dest_mask_to_rtable(now->network, now->mask);
             if (!renew_rt) {
                 // new entry should be added
                 int index;
@@ -258,6 +239,8 @@ void update_rtable_by_db(int max_num) {
                     }
                     if (flag_search_fi) break;
                 }
+
+                if (!flag_search_fi) continue;
 
                 u32 gw = pos_nbr->nbr_ip;
 

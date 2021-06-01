@@ -207,49 +207,49 @@ void update_rtable_by_db(int max_num) {
             struct mospf_lsa *now = &pos_db->array[i];
             rt_entry_t *renew_rt =
                     dest_mask_to_rtable(now->network, now->mask);
-            if (!renew_rt) {
-                // new entry should be added
-                int index;
+            if (renew_rt) continue;
 
-                if (now->rid == 0)
-                    index = rid_to_index(res.verList, num, pos_db->rid);
-                else
-                    index = rid_to_index(res.verList, num, now->rid);
+            // new entry should be added
+            int index;
 
-                if (index == -1) break;
+            if (now->rid == 0)
+                index = rid_to_index(res.verList, num, pos_db->rid);
+            else
+                index = rid_to_index(res.verList, num, now->rid);
 
-                while (dist[index] > 1 && prev[index] >= 0)
-                    index = prev[index];
+            if (index == -1) break;
 
-                u32 next_hop_rid = res.verList[index];
+            while (dist[index] > 1 && prev[index] >= 0)
+                index = prev[index];
 
-                iface_info_t *pos_if;
-                mospf_nbr_t *pos_nbr;
-                int flag_search_fi = 0;
+            u32 next_hop_rid = res.verList[index];
+
+            iface_info_t *pos_if;
+            mospf_nbr_t *pos_nbr;
+            int flag_search_fi = 0;
+            list_for_each_entry(
+                    pos_if, &instance->iface_list, list) {
                 list_for_each_entry(
-                        pos_if, &instance->iface_list, list) {
-                    list_for_each_entry(
-                            pos_nbr, &pos_if->nbr_list, list) {
-                        if (pos_nbr->nbr_id == next_hop_rid) {
-                            flag_search_fi = 1;
-                            break;
-                        }
+                        pos_nbr, &pos_if->nbr_list, list) {
+                    if (pos_nbr->nbr_id == next_hop_rid) {
+                        flag_search_fi = 1;
+                        break;
                     }
-                    if (flag_search_fi) break;
                 }
-
-                if (!flag_search_fi) continue;
-
-                u32 gw = pos_nbr->nbr_ip;
-
-                renew_rt = new_rt_entry(
-                        pos_db->array[i].network, // dest
-                        pos_db->array[i].mask,    // mask
-                        gw,                       // gw
-                        pos_if,                   // iface
-                        RT_CLC);
-                add_rt_entry(renew_rt);
+                if (flag_search_fi) break;
             }
+
+            if (!flag_search_fi) continue;
+
+            u32 gw = pos_nbr->nbr_ip;
+
+            renew_rt = new_rt_entry(
+                    pos_db->array[i].network, // dest
+                    pos_db->array[i].mask,    // mask
+                    gw,                       // gw
+                    pos_if,                   // iface
+                    RT_CLC);
+            add_rt_entry(renew_rt);
         }
     }
 }

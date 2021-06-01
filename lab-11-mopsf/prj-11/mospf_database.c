@@ -34,9 +34,8 @@ void dump_mospf_db(void *param) {
 }
 
 int rid_to_index(const u32 *verList, int size, u32 rid) {
-    for (int i = 0; i < size; ++i) {
+    for (int i = 0; i < size; ++i)
         if (verList[i] == rid) return i;
-    }
     return -1;
 }
 
@@ -253,5 +252,4 @@ void update_rtable_by_db(int max_num) {
             }
         }
     }
-
 }

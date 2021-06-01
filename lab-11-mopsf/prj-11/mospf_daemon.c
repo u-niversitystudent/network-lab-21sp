@@ -18,8 +18,6 @@ extern ustack_t *instance;
 
 pthread_mutex_t mospf_lock;
 
-#define P1_DEBUG 0
-
 void mospf_init() {
     pthread_mutex_init(&mospf_lock, NULL);
 
@@ -51,8 +49,6 @@ void mospf_run() {
 void *sending_mospf_hello_thread(void *param) {
     while (1) { // periodically
         // OK: send mOSPF Hello message periodically
-        // NEED CHECK
-        // fprintf(stdout, "TODO: send mOSPF Hello message periodically.\n");
         pthread_mutex_lock(&mospf_lock);
         iface_info_t *pos_iface, *q_iface;
         list_for_each_entry_safe(pos_iface, q_iface,
@@ -100,21 +96,46 @@ void *sending_mospf_hello_thread(void *param) {
 
 void send_mospf_lsu(void *param) {
     // OK: send mOSPF LSU message
-    // fprintf(stdout, "TODO: send mOSPF LSU message.\n");
-    iface_info_t *pos_iface, *q_iface;
 
     int nadv = 0;
+
+#ifdef DEBUG_SEND_LSU
+    fprintf(stdout, "------------------------------------------------\n"
+                    "test for send mospf lsu:\n"
+#endif
+
+    iface_info_t *pos_iface, *q_iface;
     list_for_each_entry_safe(pos_iface, q_iface,
                              &instance->iface_list, list) {
+
+#ifdef DEBUG_SEND_LSU
+        fprintf(stdout, "iface: %s\n", pos_iface->name);
+        mospf_nbr_t *pos_n;
+        list_for_each_entry(pos_n, &pos_iface->nbr_list, list) {
+            fprintf(stdout,
+                    "ip:"IP_FMT"\t"
+                    "mask:"IP_FMT"\t"
+                    "rid:"IP_FMT"\t"
+                    "alive for %d seconds\n",
+                    HOST_IP_FMT_STR(pos_n->nbr_ip),
+                    HOST_IP_FMT_STR(pos_n->nbr_mask),
+                    HOST_IP_FMT_STR(pos_n->nbr_id),
+                    pos_n->alive);
+        }
+#endif
+
         if (pos_iface->num_nbr) {
             nadv += pos_iface->num_nbr;
         } else {
             nadv += 1;
         }
     }
-#if P1_DEBUG
+
+#ifdef DEBUG_P1
     printf("nadv=%d\n", nadv);
+    sleep(1);
 #endif
+
     struct mospf_lsa *lsaArray = (
             struct mospf_lsa *) malloc(nadv * MOSPF_LSA_SIZE);
     struct mospf_lsa *current = lsaArray;
@@ -126,8 +147,8 @@ void send_mospf_lsu(void *param) {
                                      &pos_iface->nbr_list, list) {
                 current->rid = htonl(pos_nbr->nbr_id);
                 current->mask = htonl(pos_nbr->nbr_mask);
-                current->network = htonl(pos_nbr->nbr_ip
-                                         & pos_nbr->nbr_mask);
+                current->network =
+                        htonl(pos_nbr->nbr_ip & pos_nbr->nbr_mask);
                 current++;
             }
         } else {
@@ -179,7 +200,6 @@ void send_mospf_lsu(void *param) {
 
 void *checking_nbr_thread(void *param) {
     // OK: neighbor list timeout operation
-    // fprintf(stdout, "TODO: neighbor list timeout operation.\n");
     while (1) {
         pthread_mutex_lock(&mospf_lock);
 
@@ -189,7 +209,9 @@ void *checking_nbr_thread(void *param) {
             mospf_nbr_t *pos_nbr, *q_nbr;
             list_for_each_entry_safe(pos_nbr, q_nbr,
                                      &pos_iface->nbr_list, list) {
-                if (pos_nbr->alive > 3 * MOSPF_DEFAULT_HELLOINT) {
+                // XXX: the last(?) bug!
+                pos_nbr->alive += 1;
+                if (pos_nbr->alive > 3 * pos_iface->helloint) {
                     list_delete_entry(&pos_nbr->list);
                     free(pos_nbr);
                     pos_iface->num_nbr--;
@@ -198,6 +220,27 @@ void *checking_nbr_thread(void *param) {
                 }
             }
         }
+
+#ifdef DEBUG_CHECK_NBR
+        fprintf(stdout, "------------------------------------------------\n"
+                    "test for check nbr:\n");
+        list_for_each_entry(pos_iface,
+                            &instance->iface_list, list) {
+            fprintf(stdout, "iface: %s\n", pos_iface->name);
+            mospf_nbr_t *pos_nbr;
+            list_for_each_entry(pos_nbr, &pos_iface->nbr_list, list) {
+                fprintf(stdout,
+                        "ip:"IP_FMT"\t"
+                        "mask:"IP_FMT"\t"
+                        "rid:"IP_FMT"\t"
+                        "alive for: %d second(s)\n",
+                        HOST_IP_FMT_STR(pos_nbr->nbr_ip),
+                        HOST_IP_FMT_STR(pos_nbr->nbr_mask),
+                        HOST_IP_FMT_STR(pos_nbr->nbr_id),
+                        pos_nbr->alive);
+            }
+        }
+#endif
 
         pthread_mutex_unlock(&mospf_lock);
         sleep(1);
@@ -208,7 +251,6 @@ void *checking_nbr_thread(void *param) {
 void *checking_database_thread(void *param) {
     while (1) {
         // OK: link state database timeout operation
-        // fprintf(stdout, "TODO: link state database timeout operation.\n");
         mospf_db_entry_t *pos_db, *q_db;
         pthread_mutex_lock(&mospf_lock);
 
@@ -222,7 +264,6 @@ void *checking_database_thread(void *param) {
 
         dump_mospf_db(NULL);
 
-        // TODO: update route table
         update_rtable_by_db(GRAPH_SIZE);
         print_rtable();
 
@@ -235,7 +276,6 @@ void *checking_database_thread(void *param) {
 
 void handle_mospf_hello(iface_info_t *iface, const char *packet, int len) {
     // OK: handle mOSPF Hello message
-    // fprintf(stdout, "TODO: handle mOSPF Hello message.\n");
     struct iphdr *ih = packet_to_ip_hdr(packet);
     struct mospf_hdr *mh = (struct mospf_hdr *) (
             (char *) ih + IP_HDR_SIZE(ih));
@@ -245,17 +285,39 @@ void handle_mospf_hello(iface_info_t *iface, const char *packet, int len) {
     u32 ip = ntohl(ih->saddr);
     u32 mask = ntohl(mHl->mask);
 
+#ifdef DEBUG_HANDLE_HELLO
+    fprintf(stdout, "------------------------------------------------\n"
+                    "test for handle mospf hello:\n"
+                    "recv from: %s\n", iface->name);
+    fprintf(stdout,
+            "ip:"IP_FMT"\t"
+            "mask:"IP_FMT"\t"
+            "rid:"IP_FMT"\n",
+            HOST_IP_FMT_STR(rid),
+            HOST_IP_FMT_STR(mask),
+            HOST_IP_FMT_STR(rid));
+#endif
+
     pthread_mutex_lock(&mospf_lock);
 
     mospf_nbr_t *pos_nbr, *q_nbr;
     list_for_each_entry_safe(pos_nbr, q_nbr,
                              &iface->nbr_list, list) {
         if (pos_nbr->nbr_id == rid) {
+
+#ifdef DEBUG_HANDLE_HELLO
+            fprintf(stdout, "find old nbr "IP_FMT"\n", HOST_IP_FMT_STR(rid));
+#endif
             pos_nbr->alive = 0;
             pthread_mutex_unlock(&mospf_lock);
             return;
         }
     }
+
+#ifdef DEBUG_HANDLE_HELLO
+    fprintf(stdout, "create new nbr with "IP_FMT"\n", HOST_IP_FMT_STR(rid));
+#endif
+
     mospf_nbr_t *new_nbr = (mospf_nbr_t *) malloc(sizeof(mospf_nbr_t));
     new_nbr->alive = 0;
     new_nbr->nbr_id = rid;
@@ -271,19 +333,17 @@ void handle_mospf_hello(iface_info_t *iface, const char *packet, int len) {
 
 void *sending_mospf_lsu_thread(void *param) {
     // send mOSPF LSU message periodically
-    // fprintf(stdout, "TODO: send mOSPF LSU message *periodically*.\n");
     while (1) {
         pthread_mutex_lock(&mospf_lock);
         send_mospf_lsu(param);
         pthread_mutex_unlock(&mospf_lock);
-        sleep(MOSPF_DEFAULT_LSUINT);
+        sleep(instance->lsuint);
     }
     return NULL;
 }
 
 void handle_mospf_lsu(iface_info_t *iface, char *packet, int len) {
     // OK: handle mOSPF LSU message
-    // fprintf(stdout, "TODO: handle mOSPF LSU message.\n");
     struct iphdr *ih = packet_to_ip_hdr(packet);
     struct mospf_hdr *mh =
             (struct mospf_hdr *) ((char *) ih + IP_HDR_SIZE(ih));
@@ -321,6 +381,9 @@ void handle_mospf_lsu(iface_info_t *iface, char *packet, int len) {
         renew_db->array = (struct mospf_lsa *) malloc(
                 MOSPF_LSA_SIZE * nadv_pkt);
         list_add_tail(&renew_db->list, &mospf_db);
+    } else {
+        memset(renew_db->array, 0,
+               sizeof(struct mospf_lsa) * renew_db->nadv);
     }
 
     // update

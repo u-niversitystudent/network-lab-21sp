@@ -18,6 +18,11 @@
 
 // DIR_IN is direction that packet from public network to private network, 
 // DIR_OUT is direction that packet from private network to public network
+
+#define MAX_LINE_LEN 256
+#define BUF_LEN 64
+
+
 enum packet_dir {
     DIR_IN = 1, DIR_OUT, DIR_INVALID
 };

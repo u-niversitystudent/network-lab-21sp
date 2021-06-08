@@ -39,6 +39,23 @@ int rid_to_index(const u32 *verList, int size, u32 rid) {
     return -1;
 }
 
+// bubble_other sort
+static inline void bubble_other(VerRes_t res) {
+    u32 temp;
+    // XXX:
+    // only sort verList[1:-1],
+    // because verList[0] is the "source point"
+    for (int i = 2; i < res.size; ++i) {
+        for (int j = 1; j < res.size - 1; ++j) {
+            if (res.verList[j] > res.verList[j + 1]) {
+                temp = res.verList[j];
+                res.verList[j] = res.verList[j + 1];
+                res.verList[j + 1] = temp;
+            }
+        }
+    }
+}
+
 // find vertices for the graph, from mospf_db
 VerRes_t find_vertices(int num) {
     VerRes_t ret;
@@ -67,6 +84,7 @@ VerRes_t find_vertices(int num) {
                 ret.verList[ret.size++] = rid;
         }
     }
+    bubble_other(ret);
     return ret;
 }
 
@@ -194,7 +212,7 @@ void update_rtable_by_db(int max_num) {
 
 #ifdef TEST_CLEAR_RTABLE
     fprintf(stdout, "--------------------------------------\n"
-                    "test clear_rtable num=%d\n");
+                    "test clear_rtable\n");
     print_rtable();
 #endif
 
@@ -212,14 +230,15 @@ void update_rtable_by_db(int max_num) {
             // new entry should be added
             int index;
 
-            if (now->rid == 0)
+            if (now->rid == 0) {
                 index = rid_to_index(res.verList, num, pos_db->rid);
-            else
+            } else {
                 index = rid_to_index(res.verList, num, now->rid);
+            }
 
-            if (index == -1) break;
+            if (index == -1) continue;
 
-            while (dist[index] > 1 && prev[index] >= 0)
+            while (dist[index] > 1 && prev[index] != -1)
                 index = prev[index];
 
             u32 next_hop_rid = res.verList[index];
@@ -239,7 +258,7 @@ void update_rtable_by_db(int max_num) {
                 if (flag_search_fi) break;
             }
 
-            if (!flag_search_fi) continue;
+            if (flag_search_fi == 0) continue;
 
             u32 gw = pos_nbr->nbr_ip;
 

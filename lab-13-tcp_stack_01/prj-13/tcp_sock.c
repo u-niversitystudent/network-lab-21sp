@@ -100,11 +100,9 @@ struct tcp_sock *tcp_sock_lookup_established(
             && daddr == pos_tsk->sk_dip
             && sport == pos_tsk->sk_sport
             && dport == pos_tsk->sk_dport) {
-            printf("tcp sock lookup establish: success!\n");
             return pos_tsk;
         }
     }
-    printf("tcp sock lookup establish: failed!\n");
     return NULL;
 }
 
@@ -121,11 +119,9 @@ struct tcp_sock *tcp_sock_lookup_listen(u32 saddr, u16 sport) {
                         &tcp_listen_sock_table[id],
                         hash_list) {
         if (sport == pos_tsk->sk_sport) {
-            printf("tcp sock lookup listen: success!\n");
             return pos_tsk;
         }
     }
-    printf("tcp sock lookup listen: failed!\n");
     return NULL;
 }
 
@@ -135,6 +131,10 @@ struct tcp_sock *tcp_sock_lookup(struct tcp_cb *cb) {
             daddr = cb->saddr;
     u16 sport = cb->dport,
             dport = cb->sport;
+
+    fprintf(stdout, IP_FMT":%hu -> "IP_FMT":%hu\n",
+            HOST_IP_FMT_STR(saddr), sport,
+            HOST_IP_FMT_STR(daddr), dport);
 
     struct tcp_sock *tsk =
             tcp_sock_lookup_established(saddr, daddr, sport, dport);
@@ -192,14 +192,16 @@ static int tcp_sock_set_sport(struct tcp_sock *tsk, u16 port) {
 //        (!port && !(port = tcp_get_port())))
 //        return -1;
 
-    if (port && tcp_port_in_use(port)){
-        printf("port in use\n"); return -1;
-    }else if (!port && !(port = tcp_get_port())){
-        printf("port full\n"); return -1;
+    if (port && tcp_port_in_use(port)) {
+        printf("port in use\n");
+        return -1;
+    } else if (!port && !(port = tcp_get_port())) {
+        printf("port full\n");
+        return -1;
     }
 
     tsk->sk_sport = port;
-    printf("set sport: %hu\n",tsk->sk_sport);
+    printf("set sport: %hu\n", tsk->sk_sport);
 
     tcp_bind_hash(tsk);
 
@@ -256,7 +258,7 @@ int tcp_sock_bind(struct tcp_sock *tsk, struct sock_addr *skaddr) {
 
     // omit the ip address, and only bind the port
     err = tcp_sock_set_sport(tsk, ntohs(skaddr->port));
-    if (err!=0)
+    if (err != 0)
         printf("ERR occurs at tcp sock bind port=%hu\n",
                ntohs(skaddr->port));
 

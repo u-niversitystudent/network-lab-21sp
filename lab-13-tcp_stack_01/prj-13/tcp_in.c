@@ -48,8 +48,7 @@ static inline int is_tcp_seq_valid(struct tcp_sock *tsk,
 
 // Process the incoming packet according to TCP state machine. 
 void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet) {
-    // TODO: tcp_process
-    // fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
+    // OK: tcp_process in tcp_stack_01
 
     if (!tsk) {
         fprintf(stdout, "No tsk record.\n");
@@ -65,6 +64,11 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet) {
                 fprintf(stdout, "Recv SYN when state=%d\n", tsk->state);
                 break;
             }
+
+            // XXX:
+            // the process of recv a new SYN should be checked carefully,
+            // especially when you alloc new sock and
+            // assign values to certain areas
             struct tcp_sock *alc_tsk = alloc_tcp_sock();
             memcpy((char *) alc_tsk, (char *) tsk,
                    sizeof(struct tcp_sock));
@@ -81,7 +85,7 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet) {
             pSockAddr->port = htons(cb->dport);
             tcp_sock_bind(alc_tsk, pSockAddr);
             tcp_hash(alc_tsk);
-
+            // finish the assignment and add it to listen queue
             list_add_tail(&alc_tsk->list, &tsk->listen_queue);
 
             tcp_set_state(alc_tsk, TCP_SYN_RECV);

@@ -74,8 +74,7 @@ struct tcp_sock *alloc_tcp_sock() {
 //     and release the resources practically,
 //      if ref_cnt is decreased to 0.
 void free_tcp_sock(struct tcp_sock *tsk) {
-    // TODO: free_tcp_sock
-    // fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
+    // OK: free_tcp_sock
     if (--tsk->ref_cnt > 0) return;
     free_wait_struct(tsk->wait_connect);
     free_wait_struct(tsk->wait_accept);
@@ -89,8 +88,7 @@ void free_tcp_sock(struct tcp_sock *tsk) {
 //   with key (saddr, daddr, sport, dport)
 struct tcp_sock *tcp_sock_lookup_established(
         u32 saddr, u32 daddr, u16 sport, u16 dport) {
-    // TODO: tcp_sock_lookup_established
-    // fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
+    // OK: tcp_sock_lookup_established
     int id = tcp_hash_function(saddr, daddr, sport, dport);
     struct tcp_sock *pos_tsk;
     list_for_each_entry(
@@ -111,8 +109,7 @@ struct tcp_sock *tcp_sock_lookup_established(
 //   In accordance with BSD socket,
 //   saddr is in the argument list, but never used.
 struct tcp_sock *tcp_sock_lookup_listen(u32 saddr, u16 sport) {
-    // TODO: tcp_sock_lookup_listen
-    // fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
+    // OK: tcp_sock_lookup_listen
     int id = tcp_hash_function(0, 0, sport, 0);
     struct tcp_sock *pos_tsk;
     list_for_each_entry(pos_tsk,
@@ -169,9 +166,15 @@ static int tcp_port_in_use(u16 sport) {
     int value = tcp_hash_function(0, 0, sport, 0);
     struct list_head *list = &tcp_bind_sock_table[value];
     struct tcp_sock *tsk;
-    // TODO: check hash list and bind hash list
+    // XXX: framework bug appeared (thanks to Yifan Yang and Jingwen Yang)
+    //      Maybe you will find other bug that related
+    //      with the edited framework.
+    //      If you refer to other's work also, please check carefully,
+    //      for the code would not be so compatible as you may expect
+    //      with the out-dated framework.
+
+    // OK: hash list => bind hash list
     list_for_each_entry(tsk, list, bind_hash_list) {
-         printf("sport=%hu tsk->sk_port=%hu\n", sport, tsk->sk_sport);
         if (sport == tsk->sk_sport)
             return 1;
     }
@@ -253,8 +256,9 @@ int tcp_sock_bind(struct tcp_sock *tsk, struct sock_addr *skaddr) {
     // omit the ip address, and only bind the port
     err = tcp_sock_set_sport(tsk, ntohs(skaddr->port));
     if (err != 0)
-        printf("ERR occurs at tcp sock bind port=%hu\n",
-               ntohs(skaddr->port));
+        fprintf(stderr,
+                "ERR occurs when tcp sock bind sock port=%hu\n",
+                ntohs(skaddr->port));
 
     return err;
 }
@@ -270,8 +274,7 @@ int tcp_sock_bind(struct tcp_sock *tsk, struct sock_addr *skaddr) {
 //      this function is notified,
 //      which means the connection is established.
 int tcp_sock_connect(struct tcp_sock *tsk, struct sock_addr *skaddr) {
-    // TODO: tcp_sock_connect
-    // fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
+    // OK: tcp_sock_connect
 
     if (tcp_sock_set_sport(tsk, 0) < 0) {
         fprintf(stdout, "No Available port!\n");
@@ -299,7 +302,6 @@ int tcp_sock_connect(struct tcp_sock *tsk, struct sock_addr *skaddr) {
 // and hash the tcp sock into listen_table
 int tcp_sock_listen(struct tcp_sock *tsk, int backlog) {
     // TODO: tcp_sock_listen
-    // fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
     tsk->backlog = backlog;
     tcp_set_state(tsk, TCP_LISTEN);
     return tcp_hash(tsk);
@@ -340,8 +342,7 @@ inline struct tcp_sock *tcp_sock_accept_dequeue(struct tcp_sock *tsk) {
 // otherwise,
 //   sleep on the wait_accept for the incoming connection requests
 struct tcp_sock *tcp_sock_accept(struct tcp_sock *tsk) {
-    // TODO: tcp_sock_accept
-    // fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
+    // OK: tcp_sock_accept
     while (list_empty(&tsk->accept_queue)) {
         sleep_on(tsk->wait_accept);
     }
@@ -358,8 +359,7 @@ struct tcp_sock *tcp_sock_accept(struct tcp_sock *tsk) {
 // sending FIN/RST packet to the peer,
 // switching TCP_STATE to closed
 void tcp_sock_close(struct tcp_sock *tsk) {
-    // TODO: tcp_sock_close
-    // fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
+    // OK: tcp_sock_close
     if (tsk->parent) {
         while (tsk->state != TCP_CLOSE_WAIT);
     }

@@ -46,7 +46,7 @@ static inline int is_tcp_seq_valid(struct tcp_sock *tsk,
     }
 }
 
-// Process the incoming packet according to TCP state machine. 
+// Process the incoming packet according to TCP state machine.
 void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet) {
     // OK: tcp_process in tcp_stack_01
 

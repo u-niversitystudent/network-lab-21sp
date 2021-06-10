@@ -11,8 +11,7 @@ static struct list_head timer_list;
 // find the tcp sock which stays for at 2*MSL,
 // release it
 void tcp_scan_timer_list() {
-    // TODO: tcp_scan_timer_list
-    // fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
+    // OK: tcp_scan_timer_list
     struct tcp_timer *pos_tt, *q_tt;
     list_for_each_entry_safe(pos_tt, q_tt, &timer_list, list) {
         pos_tt->timeout += TCP_TIMER_SCAN_INTERVAL;
@@ -30,8 +29,7 @@ void tcp_scan_timer_list() {
 // set the timewait timer of a tcp sock,
 // by adding the timer into timer_list
 void tcp_set_timewait_timer(struct tcp_sock *tsk) {
-    // TODO: tcp_set_timewait_timer
-    // fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
+    // OK: tcp_set_timewait_timer
     tsk->timewait.type = 0; // type = timewait
     tsk->timewait.timeout = 0; // prepare for inc op
     list_add_tail(&tsk->timewait.list, &timer_list);

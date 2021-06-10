@@ -301,7 +301,7 @@ int tcp_sock_connect(struct tcp_sock *tsk, struct sock_addr *skaddr) {
 // switch the TCP_STATE,
 // and hash the tcp sock into listen_table
 int tcp_sock_listen(struct tcp_sock *tsk, int backlog) {
-    // TODO: tcp_sock_listen
+    // OK: tcp_sock_listen
     tsk->backlog = backlog;
     tcp_set_state(tsk, TCP_LISTEN);
     return tcp_hash(tsk);

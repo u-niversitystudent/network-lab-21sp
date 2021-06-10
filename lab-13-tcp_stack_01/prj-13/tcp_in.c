@@ -73,9 +73,9 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet) {
             alc_tsk->iss = tcp_new_iss();
             alc_tsk->snd_una = tsk->snd_una;
             alc_tsk->rcv_nxt = tsk->rcv_nxt;
-            alc_tsk->snd_nxt = tsk->snd_nxt;
-            struct sock_addr *pSockAddr =
-                    (struct sock_addr *) malloc(sizeof(struct sock_addr));
+            alc_tsk->snd_nxt = tsk->iss;
+            struct sock_addr *pSockAddr = (
+                    struct sock_addr *) malloc(sizeof(struct sock_addr));
             pSockAddr->ip = htonl(cb->daddr);
             pSockAddr->port = htons(cb->dport);
             tcp_sock_bind(alc_tsk, pSockAddr);

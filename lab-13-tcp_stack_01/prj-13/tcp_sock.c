@@ -67,12 +67,12 @@ struct tcp_sock *alloc_tcp_sock() {
 // release all the resources of tcp sock
 //
 //   To make the stack run safely,
-//   each time the tcp sock is referred (e.g. hashed),
-//    the ref_cnt is increased by 1.
-//   each time free_tcp_sock is called,
-//    the ref_cnt is decreased by 1,
-//   and release the resources practically,
-//    if ref_cnt is decreased to 0.
+//     each time the tcp sock is referred (e.g. hashed),
+//      the ref_cnt is increased by 1.
+//     each time free_tcp_sock is called,
+//      the ref_cnt is decreased by 1,
+//     and release the resources practically,
+//      if ref_cnt is decreased to 0.
 void free_tcp_sock(struct tcp_sock *tsk) {
     // TODO: free_tcp_sock
     // fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
@@ -188,11 +188,18 @@ static u16 tcp_get_port() {
 
 // tcp sock tries to use port as its source port
 static int tcp_sock_set_sport(struct tcp_sock *tsk, u16 port) {
-    if ((port && tcp_port_in_use(port)) ||
-        (!port && !(port = tcp_get_port())))
-        return -1;
+//    if ((port && tcp_port_in_use(port)) ||
+//        (!port && !(port = tcp_get_port())))
+//        return -1;
+
+    if (port && tcp_port_in_use(port)){
+        printf("port in use\n"); return -1;
+    }else if (!port && !(port = tcp_get_port())){
+        printf("port full\n"); return -1;
+    }
 
     tsk->sk_sport = port;
+    printf("set sport: %hu\n",tsk->sk_sport);
 
     tcp_bind_hash(tsk);
 
@@ -249,6 +256,9 @@ int tcp_sock_bind(struct tcp_sock *tsk, struct sock_addr *skaddr) {
 
     // omit the ip address, and only bind the port
     err = tcp_sock_set_sport(tsk, ntohs(skaddr->port));
+    if (err!=0)
+        printf("ERR occurs at tcp sock bind port=%hu\n",
+               ntohs(skaddr->port));
 
     return err;
 }
@@ -360,23 +370,8 @@ void tcp_sock_close(struct tcp_sock *tsk) {
     if (tsk->state == TCP_ESTABLISHED) {
         tcp_set_state(tsk, TCP_FIN_WAIT_1);
         tcp_send_control_packet(tsk, TCP_FIN);
-    }
-    else if (tsk->state == TCP_CLOSE_WAIT) {
+    } else if (tsk->state == TCP_CLOSE_WAIT) {
         tcp_set_state(tsk, TCP_LAST_ACK);
         tcp_send_control_packet(tsk, TCP_FIN);
     }
-//    switch (tsk->state) {
-//        TCP_CLOSE_WAIT:
-//            tcp_set_state(tsk, TCP_LAST_ACK);
-//            tcp_send_control_packet(tsk, TCP_FIN | TCP_ACK);
-//            break;
-//        TCP_ESTABLISHED:
-//            tcp_set_state(tsk, TCP_FIN_WAIT_1);
-//            tcp_send_control_packet(tsk, TCP_FIN | TCP_ACK);
-//            break;
-//        default:
-//            if (tsk->state == TCP_CLOSED) break;
-//            tcp_unhash(tsk);
-//            tcp_set_state(tsk, TCP_CLOSED);
-//    }
 }

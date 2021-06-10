@@ -15,12 +15,16 @@ struct tcp_hash_table {
     struct list_head bind_table[TCP_HASH_SIZE];
 };
 
-// tcp hash function: if hashed into bind_table or listen_table, only use sport; 
-// otherwise, use all the 4 arguments
-static inline int
-tcp_hash_function(u32 saddr, u32 daddr, u16 sport, u16 dport) {
-    int result = hash8((char *) &saddr, 4) ^hash8((char *) &daddr, 4) ^\
-                 hash8((char *) &sport, 2) ^hash8((char *) &dport, 2);
+// tcp hash function
+//   if hashed into bind_table or listen_table, only use sport;
+//   otherwise, use all the 4 arguments
+static inline int tcp_hash_function(
+        u32 saddr, u32 daddr, u16 sport, u16 dport) {
+    int result =
+            hash8((char *) &saddr, 4)
+            ^hash8((char *) &daddr, 4) \
+            ^hash8((char *) &sport, 2) \
+            ^hash8((char *) &dport, 2);
 
     return result & TCP_HASH_MASK;
 }

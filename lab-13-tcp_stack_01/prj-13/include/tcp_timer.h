@@ -6,8 +6,8 @@
 #include <stddef.h>
 
 struct tcp_timer {
-    int type;    // time-wait: 0		retrans: 1
-    int timeout;    // in micro second
+    int type;    // time-wait: 0  retrans: 1
+    int timeout; // in micro second
     struct list_head list;
     int enable;
 };

@@ -21,8 +21,8 @@ struct sock_addr {
 
 // the main structure that manages a connection locally
 struct tcp_sock {
-    // sk_ip, sk_sport, sk_sip, sk_dport are the 4-tuple that represents a
-    // connection
+    // sk_ip, sk_sport, sk_sip, sk_dport are
+    // the 4-tuple that represents a connection
     struct sock_addr local;
     struct sock_addr peer;
 #define sk_sip local.ip
@@ -30,26 +30,37 @@ struct tcp_sock {
 #define sk_dip peer.ip
 #define sk_dport peer.port
 
-    // pointer to parent tcp sock, a tcp sock which bind and listen to a port
-    // is the parent of tcp socks when *accept* a connection request
+    // pointer to parent tcp sock,
+    //   a tcp sock which bind and listen to a port
+    //   is the parent of tcp socks
+    //   when *accept* a connection request
     struct tcp_sock *parent;
 
-    // represents the number that the tcp sock is referred, if this number
-    // decreased to zero, the tcp sock should be released
+    // ref_cnt
+    //   represents the number that the tcp sock is referred,
+    //   if this number decreased to zero,
+    //   the tcp sock should be released
     int ref_cnt;
 
-    // hash_list is used to hash tcp sock into listen_table or established_table,
-    // bind_hash_list is used to hash into bind_table
+    // hash_list
+    //   is used to hash tcp sock into listen_table
+    //   or established_table,
+    // bind_hash_list
+    //   is used to hash into bind_table
     struct list_head hash_list;
     struct list_head bind_hash_list;
 
-    // when a passively opened tcp sock receives a SYN packet, it mallocs a child
-    // tcp sock to serve the incoming connection, which is pending in the
-    // listen_queue of parent tcp sock
+    // listen_queue
+    //   when a passively opened tcp sock receives a SYN packet,
+    //   it mallocs a child
+    //   tcp sock to serve the incoming connection,
+    //   which is pending in the listen_queue of parent tcp sock
     struct list_head listen_queue;
-    // when receiving the last packet (ACK) of the 3-way handshake, the tcp sock
-    // in listen_queue will be moved into accept_queue, waiting for *accept* by
-    // parent tcp sock
+
+    // accept_queue
+    //   when receiving the last packet (ACK) of the 3-way handshake,
+    //   the tcp sock in listen_queue will be moved into accept_queue,
+    //   waiting for *accept* by parent tcp sock
     struct list_head accept_queue;
 
 
@@ -59,7 +70,8 @@ struct tcp_sock {
     // the maximum number of pending tcp sock in accept_queue
     int backlog;
 
-    // the list node used to link listen_queue or accept_queue of parent tcp sock
+    // the list node used to link listen_queue
+    // or accept_queue of parent tcp sock
     struct list_head list;
     // tcp timer used during TCP_TIME_WAIT state
     struct tcp_timer timewait;
@@ -67,7 +79,8 @@ struct tcp_sock {
     // used for timeout retransmission
     struct tcp_timer retrans_timer;
 
-    // synch waiting structure of *connect*, *accept*, *recv*, and *send*
+    // synch waiting structure of
+    // *connect*, *accept*, *recv*, and *send*
     struct synch_wait *wait_connect;
     struct synch_wait *wait_accept;
     struct synch_wait *wait_recv;
@@ -75,7 +88,7 @@ struct tcp_sock {
 
     // receiving buffer
     struct ring_buffer *rcv_buf;
-    // used to pend unacked packets
+    // used to pend unpacked packets
     struct list_head send_buf;
     // used to pend out-of-order packets
     struct list_head rcv_ofo_buf;
@@ -91,7 +104,8 @@ struct tcp_sock {
     // the highest byte sent
     u32 snd_nxt;
 
-    // the highest byte ACKed by itself (i.e. the byte expected to receive next)
+    // the highest byte ACKed by itself
+    //   (i.e. the byte expected to receive next)
     u32 rcv_nxt;
 
     // used to indicate the end of fast recovery

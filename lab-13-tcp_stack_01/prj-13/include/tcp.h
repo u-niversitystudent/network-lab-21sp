@@ -39,11 +39,11 @@ struct tcphdr {
 
 #define TCP_HDR_OFFSET 5
 #define TCP_BASE_HDR_SIZE 20
-#define TCP_HDR_SIZE(tcp) (tcp->off * 4)
+#define TCP_HDR_SIZE(tcp) ((tcp)->off * 4)
 
 #define TCP_DEFAULT_WINDOW 65535
 
-// control block, representing all the necesary information of a packet
+// control block, representing all the necessary information of a packet
 struct tcp_cb {
     u32 saddr;        // source addr of the packet
     u32 daddr;        // source port of the packet

@@ -58,6 +58,7 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet) {
 
     tsk->snd_una = cb->ack;
     tsk->rcv_nxt = cb->seq_end;
+
     switch (cb->flags) {
         case TCP_SYN:
             if (tsk->state != TCP_LISTEN) {
@@ -65,22 +66,25 @@ void tcp_process(struct tcp_sock *tsk, struct tcp_cb *cb, char *packet) {
                 break;
             }
             struct tcp_sock *alc_tsk = alloc_tcp_sock();
-            list_add_tail(&alc_tsk->list, &tsk->listen_queue);
+            memcpy((char *) alc_tsk, (char *) tsk,
+                   sizeof(struct tcp_sock));
+            alc_tsk->parent = tsk;
             alc_tsk->sk_sip = cb->daddr;
+            alc_tsk->sk_sport = cb->dport;
             alc_tsk->sk_dip = cb->saddr;
             alc_tsk->sk_dport = cb->sport;
-            alc_tsk->parent = tsk;
             alc_tsk->iss = tcp_new_iss();
-            alc_tsk->snd_una = tsk->snd_una;
-            alc_tsk->rcv_nxt = tsk->rcv_nxt;
-            alc_tsk->snd_nxt = tsk->iss;
+            alc_tsk->snd_nxt = alc_tsk->iss;
             struct sock_addr *pSockAddr = (
                     struct sock_addr *) malloc(sizeof(struct sock_addr));
             pSockAddr->ip = htonl(cb->daddr);
             pSockAddr->port = htons(cb->dport);
             tcp_sock_bind(alc_tsk, pSockAddr);
-            tcp_set_state(alc_tsk, TCP_SYN_RECV);
             tcp_hash(alc_tsk);
+
+            list_add_tail(&alc_tsk->list, &tsk->listen_queue);
+
+            tcp_set_state(alc_tsk, TCP_SYN_RECV);
             tcp_send_control_packet(alc_tsk, TCP_SYN | TCP_ACK);
             break;
         case (TCP_SYN | TCP_ACK):

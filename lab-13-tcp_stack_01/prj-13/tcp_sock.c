@@ -146,7 +146,8 @@ struct tcp_sock *tcp_sock_lookup(struct tcp_cb *cb) {
 
 // hash tcp sock into bind_table, using sport as the key
 static int tcp_bind_hash(struct tcp_sock *tsk) {
-    int bind_hash_value = tcp_hash_function(0, 0, tsk->sk_sport, 0);
+    int bind_hash_value = tcp_hash_function
+            (0, 0, tsk->sk_sport, 0);
     struct list_head *list = &tcp_bind_sock_table[bind_hash_value];
     list_add_head(&tsk->bind_hash_list, list);
 
@@ -168,8 +169,10 @@ static int tcp_port_in_use(u16 sport) {
     int value = tcp_hash_function(0, 0, sport, 0);
     struct list_head *list = &tcp_bind_sock_table[value];
     struct tcp_sock *tsk;
+    // TODO: check hash list and bind hash list
     list_for_each_entry(tsk, list, bind_hash_list) {
-        if (tsk->sk_sport == sport)
+         printf("sport=%hu tsk->sk_port=%hu\n", sport, tsk->sk_sport);
+        if (sport == tsk->sk_sport)
             return 1;
     }
 
@@ -188,20 +191,11 @@ static u16 tcp_get_port() {
 
 // tcp sock tries to use port as its source port
 static int tcp_sock_set_sport(struct tcp_sock *tsk, u16 port) {
-//    if ((port && tcp_port_in_use(port)) ||
-//        (!port && !(port = tcp_get_port())))
-//        return -1;
-
-    if (port && tcp_port_in_use(port)) {
-        printf("port in use\n");
+    if ((port && tcp_port_in_use(port)) ||
+        (!port && !(port = tcp_get_port())))
         return -1;
-    } else if (!port && !(port = tcp_get_port())) {
-        printf("port full\n");
-        return -1;
-    }
 
     tsk->sk_sport = port;
-    printf("set sport: %hu\n", tsk->sk_sport);
 
     tcp_bind_hash(tsk);
 

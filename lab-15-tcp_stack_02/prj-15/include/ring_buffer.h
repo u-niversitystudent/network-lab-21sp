@@ -6,6 +6,7 @@
 #include <string.h>
 
 struct ring_buffer {
+    pthread_mutex_t rbuf_lock;
     int size;
     int head;        // read from head
     int tail;        // write from tail

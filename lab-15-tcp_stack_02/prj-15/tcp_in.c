@@ -70,8 +70,7 @@ void tcp_process(
             // XXX:
             // the process of recv a new SYN should be
             // checked carefully, especially when you
-            // alloc new sock and
-            // assign values to certain areas
+            // alloc new sock and assign values to certain areas
             struct tcp_sock *alc_tsk = alloc_tcp_sock();
             memcpy((char *) alc_tsk, (char *) tsk,
                    sizeof(struct tcp_sock));
@@ -95,15 +94,18 @@ void tcp_process(
             tcp_set_state(alc_tsk, TCP_SYN_RECV);
             tcp_send_control_packet(alc_tsk, TCP_SYN | TCP_ACK);
             break;
-        case (TCP_SYN | TCP_ACK):
+        case (TCP_ACK | TCP_SYN):
             if (tsk->state == TCP_SYN_SENT) wake_up(tsk->wait_connect);
             break;
         case TCP_ACK:
             switch (tsk->state) {
                 case TCP_SYN_RECV:
-                    tcp_sock_accept_dequeue(tsk);
+                    tcp_sock_accept_enqueue(tsk);
                     wake_up(tsk->parent->wait_accept);
                     tcp_set_state(tsk, TCP_ESTABLISHED);
+                    break;
+                case TCP_ESTABLISHED:
+                    wake_up(tsk->wait_send);
                     break;
                 case TCP_FIN_WAIT_1:
                     tcp_set_state(tsk, TCP_FIN_WAIT_2);
@@ -117,6 +119,14 @@ void tcp_process(
                     fprintf(stdout, "  [flag=ACK] No rule for %d\n",
                             tsk->state);
             }
+            break;
+        case (TCP_ACK | TCP_PSH):
+            pthread_mutex_lock(&tsk->rcv_buf->rbuf_lock);
+            write_ring_buffer(tsk->rcv_buf, cb->payload, cb->pl_len);
+            pthread_mutex_unlock(&tsk->rcv_buf->rbuf_lock);
+            if (tsk->wait_recv->sleep) wake_up(tsk->wait_recv);
+            tcp_send_control_packet(tsk, TCP_ACK);
+            if (tsk->wait_send->sleep) wake_up(tsk->wait_send);
             break;
         case (TCP_ACK | TCP_FIN):
             if (tsk->state != TCP_FIN_WAIT_1) {

@@ -13,6 +13,9 @@
 
 #define PORT_MIN    12345
 #define PORT_MAX    23456
+#define TCP_ALL_BASE_SIZE ETHER_HDR_SIZE \
+            + IP_BASE_HDR_SIZE + TCP_BASE_HDR_SIZE
+#define MTU_SIZE ETH_FRAME_LEN - TCP_ALL_BASE_SIZE
 
 struct sock_addr {
     u32 ip;

@@ -63,6 +63,8 @@ struct tcp_sock *alloc_tcp_sock() {
     tsk->wait_recv = alloc_wait_struct();
     tsk->wait_send = alloc_wait_struct();
 
+    pthread_mutex_init(&tsk->rcv_buf->rbuf_lock, 0);
+
     return tsk;
 }
 
@@ -375,14 +377,33 @@ void tcp_sock_close(struct tcp_sock *tsk) {
     }
 }
 
-int tcp_sock_read(struct tcp_sock *tsk, char *buf, int len){
+int tcp_sock_read(struct tcp_sock *tsk, char *buf, int len) {
     // TODO: tcp_sock_read
-    fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
-    return 0;
+    pthread_mutex_lock(&tsk->rcv_buf->rbuf_lock);
+    while (ring_buffer_empty(tsk->rcv_buf)) {
+        pthread_mutex_unlock(&tsk->rcv_buf->rbuf_lock);
+        sleep_on(tsk->wait_recv);
+        pthread_mutex_lock(&tsk->rcv_buf->rbuf_lock);
+    }
+    int read_len = read_ring_buffer(tsk->rcv_buf, buf, len);
+    wake_up(tsk->wait_recv);
+    pthread_mutex_unlock(&tsk->rcv_buf->rbuf_lock);
+    return read_len;
 }
 
-int tcp_sock_write(struct tcp_sock *tsk, char *buf, int len){
+int tcp_sock_write(struct tcp_sock *tsk, char *buf, int len) {
     // TODO: tcp_sock_write
-    fprintf(stdout, "TODO: implement %s please.\n", __FUNCTION__);
-    return 0;
+    int msg_len = min(strlen(buf), len), sent = 0;
+    while (sent < msg_len) {
+        int not_sent = msg_len - sent;
+        int data_len = min(MTU_SIZE, not_sent);
+        int pkt_len = TCP_ALL_BASE_SIZE + data_len;
+        char *packet = (char *) malloc(pkt_len);
+        memcpy(packet + TCP_ALL_BASE_SIZE,
+               buf + sent, data_len);
+        tcp_send_packet(tsk, packet, pkt_len);
+        sent += data_len;
+        sleep_on(tsk->wait_send);
+    }
+    return sent;
 }

@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 import sys
 import string
@@ -17,15 +17,19 @@ def server(port):
     cs, addr = s.accept()
     print addr
 
+    filename = 'server-output.dat'
+    f = open(filename, 'a')
+
     while True:
         data = cs.recv(1000)
-        print(type(data))
+        # print(data)
         if data:
-            data = 'server echoes: ' + data
-            cs.send(data)
+            f.write(data)
+            f.flush() # Force Update File Write buffer
         else:
             break
 
+    f.close()
     s.close()
 
 
@@ -33,12 +37,18 @@ def client(ip, port):
     s = socket.socket()
     s.connect((ip, int(port)))
 
-    for i in range(10):
-        new_data = data[i:] + data[:i+1]
-        s.send(new_data)
-        print s.recv(1000)
-        sleep(1)
+    filename = 'client-input.dat'
+    f = open(filename, 'r')
 
+    while True:
+        data = f.read(500)
+        if (data != ''):
+            s.send(data)
+            sleep(0.5)
+        else:
+            break
+
+    f.close()
     s.close()
 
 if __name__ == '__main__':

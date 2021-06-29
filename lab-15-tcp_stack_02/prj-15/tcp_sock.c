@@ -378,7 +378,7 @@ void tcp_sock_close(struct tcp_sock *tsk) {
 }
 
 int tcp_sock_read(struct tcp_sock *tsk, char *buf, int len) {
-    // TODO: tcp_sock_read
+    // OK: tcp_sock_read
     pthread_mutex_lock(&tsk->rcv_buf->rbuf_lock);
     while (ring_buffer_empty(tsk->rcv_buf)) {
         pthread_mutex_unlock(&tsk->rcv_buf->rbuf_lock);
@@ -392,7 +392,7 @@ int tcp_sock_read(struct tcp_sock *tsk, char *buf, int len) {
 }
 
 int tcp_sock_write(struct tcp_sock *tsk, char *buf, int len) {
-    // TODO: tcp_sock_write
+    // OK: tcp_sock_write
     int msg_len = min(strlen(buf), len), sent = 0;
     while (sent < msg_len) {
         int not_sent = msg_len - sent;

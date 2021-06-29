@@ -5,6 +5,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+//#define STRING_DELIVERY
+
+#ifndef STRING_DELIVERY
+#define DAT_CLIENT "client-input.dat"
+#define DAT_SERVER "server-output.dat"
+#endif
+
 // tcp server application, listens to port (specified by arg)
 // and serves only one connection request
 void *tcp_server(void *arg) {
@@ -31,8 +38,35 @@ void *tcp_server(void *arg) {
     log(DEBUG, "accept a connection.");
 
     char rbuf[1001];
-    char wbuf[1024];
     int rlen = 0;
+#ifndef STRING_DELIVERY
+    fprintf(stdout, "Start receiving file %s from client...\n",
+            DAT_SERVER);
+    FILE *fp = fopen(DAT_SERVER, "w+");
+    u32 wlen = 0;
+    while (1) {
+        memset(rbuf, 0, sizeof(rbuf));
+        rlen = tcp_sock_read(csk, rbuf, 1000);
+        if (rlen == 0) {
+            log(DEBUG, "tcp_sock_read return 0, finish transmission.");
+            break;
+        } else if (rlen > 0) {
+            wlen = fwrite(rbuf, sizeof(char), rlen, fp);
+            fflush(fp);
+            if (wlen < rlen) {
+                fprintf(stdout, "Mistakes during file writing.\n");
+                break;
+            }
+        } else {
+            log(DEBUG,
+                "tcp_sock_read return negative value, something goes wrong.");
+            exit(1);
+        }
+    }
+    usleep(100);
+    fclose(fp);
+#else
+    char wbuf[1024];
     while (1) {
         rlen = tcp_sock_read(csk, rbuf, 1000);
         if (rlen == 0) {
@@ -52,7 +86,7 @@ void *tcp_server(void *arg) {
             exit(1);
         }
     }
-
+#endif
     log(DEBUG, "close this connection.");
 
     tcp_sock_close(csk);
@@ -75,12 +109,36 @@ void *tcp_client(void *arg) {
         exit(1);
     }
 
+    char rbuf[1001];
+    int dlen;
+
+#ifndef STRING_DELIVERY
+    FILE *fp = fopen(DAT_CLIENT, "r");
+    if (fp) {
+        fprintf(stdout, "Start sending file %s to the server...\n",
+                DAT_CLIENT);
+        memset(rbuf, 0, sizeof(rbuf));
+        while ((dlen = fread(rbuf, sizeof(char), 1000, fp)) > 0) {
+            if (tcp_sock_write(tsk, rbuf, dlen) < 0) {
+                fprintf(stdout, "Error encounter when write to buf\n");
+                break;
+            }
+            memset(rbuf, 0, sizeof(rbuf));
+            if (feof(fp)) break;
+            // usleep(100);
+        }
+        fclose(fp);
+        fprintf(stdout, "Finish sending process.\n");
+    } else {
+        fprintf(stdout, "File %s not found.\n", DAT_CLIENT);
+    }
+    // sleep(1);
+#else
+    int rlen = 0;
     char *data = "0123456789abcdefghijklmnopqrstuvw"
                  "xyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    int dlen = strlen(data);
+    dlen = strlen(data);
     char *wbuf = malloc(dlen + 1);
-    char rbuf[1001];
-    int rlen = 0;
 
     int n = 10;
     for (int i = 0; i < n; i++) {
@@ -105,9 +163,10 @@ void *tcp_client(void *arg) {
         sleep(1);
     }
 
-    tcp_sock_close(tsk);
-
     free(wbuf);
+#endif
+
+    tcp_sock_close(tsk);
 
     return NULL;
 }

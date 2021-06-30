@@ -60,40 +60,12 @@ void tcp_process(
     tsk->snd_una = cb->ack;
     tsk->rcv_nxt = cb->seq_end;
 
-    // change STM's transfer reference
-    switch(tsk->state){
+    // FSM that refers to sock status
+    switch (tsk->state) {
         case TCP_CLOSED:
             break;
         case TCP_LISTEN:
-            break;
-        case TCP_SYN_RECV:
-            break;
-        case TCP_SYN_SENT:
-            break;
-        case TCP_ESTABLISHED:
-            break;
-        case TCP_CLOSE_WAIT:
-            break;
-        case TCP_LAST_ACK:
-            break;
-        case TCP_FIN_WAIT_1:
-            break;
-        case TCP_FIN_WAIT_2:
-            break;
-        case TCP_CLOSING:
-            break;
-        case TCP_TIME_WAIT:
-            break;
-        default:
-            break;
-    }
-
-
-/*
-    switch (cb->flags) {
-        case TCP_SYN:
-            if (tsk->state == TCP_LISTEN) {
-
+            if (cb->flags & TCP_SYN) {
                 // XXX:
                 // the process of recv a new SYN should be
                 // checked carefully, especially when you
@@ -120,83 +92,91 @@ void tcp_process(
 
                 tcp_set_state(alc_tsk, TCP_SYN_RECV);
                 tcp_send_control_packet(alc_tsk, TCP_SYN | TCP_ACK);
-                break;
-            } else {
-                fprintf(stdout, "Recv SYN when state=%d\n", tsk->state);
-                break;
             }
-        case (TCP_ACK | TCP_SYN):
-            if (tsk->state == TCP_SYN_SENT)
+            break;
+        case TCP_SYN_RECV:
+            if (cb->flags & TCP_ACK) {
+                tcp_sock_accept_enqueue(tsk);
+                wake_up(tsk->parent->wait_accept);
+                tcp_set_state(tsk, TCP_ESTABLISHED);
+            }
+            break;
+        case TCP_SYN_SENT:
+            if ((cb->flags & TCP_ACK) &&
+                (cb->flags & TCP_SYN)) {
                 wake_up(tsk->wait_connect);
+            }
             break;
-        case TCP_ACK:
-            switch (tsk->state) {
-                case TCP_SYN_RECV:
-                    tcp_sock_accept_enqueue(tsk);
-                    wake_up(tsk->parent->wait_accept);
-                    tcp_set_state(tsk, TCP_ESTABLISHED);
-                    break;
-                case TCP_ESTABLISHED:
+        case TCP_ESTABLISHED:
+            if (cb->flags & TCP_FIN) {
+                tcp_set_state(tsk, TCP_LAST_ACK);
+                tcp_send_control_packet(tsk, TCP_ACK | TCP_FIN);
+            } else if (cb->flags & TCP_ACK) {
+                if (cb->flags & TCP_PSH) {
+                    pthread_mutex_lock(&tsk->rcv_buf->rbuf_lock);
+                    write_ring_buffer(tsk->rcv_buf, cb->payload, cb->pl_len);
+                    pthread_mutex_unlock(&tsk->rcv_buf->rbuf_lock);
+                    if (tsk->wait_recv->sleep) wake_up(tsk->wait_recv);
+                    tcp_send_control_packet(tsk, TCP_ACK);
+                    if (tsk->wait_send->sleep) wake_up(tsk->wait_send);
+                } else {
                     wake_up(tsk->wait_send);
-                    break;
-                case TCP_FIN_WAIT_1:
-                    tcp_set_state(tsk, TCP_FIN_WAIT_2);
-                    break;
-                case TCP_LAST_ACK:
-                    tcp_set_state(tsk, TCP_CLOSED);
-                    if (!tsk->parent) tcp_bind_unhash(tsk);
-                    tcp_unhash(tsk);
-                    break;
-                default:
-                    fprintf(stdout, "  [flag=ACK] No rule for %d\n",
-                            tsk->state);
+                }
             }
             break;
-        case (TCP_ACK | TCP_PSH):
-            if (tsk->state == TCP_ESTABLISHED) {
-                pthread_mutex_lock(&tsk->rcv_buf->rbuf_lock);
-                write_ring_buffer(tsk->rcv_buf, cb->payload, cb->pl_len);
-                pthread_mutex_unlock(&tsk->rcv_buf->rbuf_lock);
-                if (tsk->wait_recv->sleep) wake_up(tsk->wait_recv);
-                tcp_send_control_packet(tsk, TCP_ACK);
-                if (tsk->wait_send->sleep) wake_up(tsk->wait_send);
-            } else {
-                fprintf(stdout, "  [flag=ACK|PSH] No rule for %d\n",
-                        tsk->state);
+        case TCP_CLOSE_WAIT:
+            break;
+        case TCP_LAST_ACK:
+            if (cb->flags & TCP_ACK) {
+                tcp_set_state(tsk, TCP_CLOSED);
+                if (!tsk->parent) tcp_bind_unhash(tsk);
+                tcp_unhash(tsk);
             }
             break;
-        case (TCP_ACK | TCP_FIN):
-            if (tsk->state == TCP_FIN_WAIT_1) {
-                tcp_set_state(tsk, TCP_TIME_WAIT);
-                tcp_send_control_packet(tsk, TCP_ACK);
-                tcp_set_timewait_timer(tsk);
-                break;
-            } else {
-                fprintf(stdout,
-                        "  [flag=ACK|FIN] No rule for %d\n",
-                        tsk->state);
-                break;
-            }
-        case TCP_FIN:
-            switch (tsk->state) {
-                case TCP_ESTABLISHED:
-                    tcp_set_state(tsk, TCP_LAST_ACK);
-                    tcp_send_control_packet(
-                            tsk, TCP_ACK | TCP_FIN);
-                    break;
-                case TCP_FIN_WAIT_2:
+        case TCP_FIN_WAIT_1:
+            if (cb->flags & TCP_ACK) {
+                if (cb->flags & TCP_FIN) {
                     tcp_set_state(tsk, TCP_TIME_WAIT);
                     tcp_send_control_packet(tsk, TCP_ACK);
                     tcp_set_timewait_timer(tsk);
-                    break;
-                default:
-                    fprintf(stdout,
-                            "  [flag=FIN] No rule for %d\n",
-                            tsk->state);
+                } else {
+                    tcp_set_state(tsk, TCP_FIN_WAIT_2);
+                }
             }
             break;
+        case TCP_FIN_WAIT_2:
+            if (cb->flags & TCP_FIN) {
+                tcp_set_state(tsk, TCP_TIME_WAIT);
+                tcp_send_control_packet(tsk, TCP_ACK);
+                tcp_set_timewait_timer(tsk);
+            }
+            break;
+        case TCP_CLOSING:
+            break;
+        case TCP_TIME_WAIT:
+            break;
         default:
-            fprintf(stdout, "No rule for flag %d\n", cb->flags);
+            if (cb->flags & TCP_FIN) {
+                fprintf(stdout,
+                        "  [flag=FIN] No rule for %d\n",
+                        tsk->state);
+            } else if (cb->flags & TCP_SYN) {
+                fprintf(stdout, "Recv SYN when state=%d\n", tsk->state);
+            } else if (cb->flags & TCP_ACK) {
+                if (cb->flags & TCP_PSH) {
+                    fprintf(stdout,
+                            "  [flag=ACK|PSH] No rule for %d\n",
+                            tsk->state);
+                } else if (cb->flags & TCP_FIN) {
+                    fprintf(stdout,
+                            "  [flag=ACK|FIN] No rule for %d\n",
+                            tsk->state);
+                } else {
+                    fprintf(stdout, "  [flag=ACK] No rule for %d\n",
+                            tsk->state);
+                }
+            }
+            break;
     }
-*/
+
 }

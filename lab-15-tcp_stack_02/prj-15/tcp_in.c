@@ -62,40 +62,42 @@ void tcp_process(
 
     switch (cb->flags) {
         case TCP_SYN:
-            if (tsk->state != TCP_LISTEN) {
+            if (tsk->state == TCP_LISTEN) {
+
+                // XXX:
+                // the process of recv a new SYN should be
+                // checked carefully, especially when you
+                // alloc new sock and assign values to certain areas
+                struct tcp_sock *alc_tsk = alloc_tcp_sock();
+                memcpy((char *) alc_tsk, (char *) tsk,
+                       sizeof(struct tcp_sock));
+                alc_tsk->parent = tsk;
+                alc_tsk->sk_sip = cb->daddr;
+                alc_tsk->sk_sport = cb->dport;
+                alc_tsk->sk_dip = cb->saddr;
+                alc_tsk->sk_dport = cb->sport;
+                alc_tsk->iss = tcp_new_iss();
+                alc_tsk->snd_nxt = alc_tsk->iss;
+                struct sock_addr *pSockAddr =
+                        (struct sock_addr *) malloc(
+                                sizeof(struct sock_addr));
+                pSockAddr->ip = htonl(cb->daddr);
+                pSockAddr->port = htons(cb->dport);
+                tcp_sock_bind(alc_tsk, pSockAddr);
+                tcp_hash(alc_tsk);
+                // finish the assignment and add it to listen queue
+                list_add_tail(&alc_tsk->list, &tsk->listen_queue);
+
+                tcp_set_state(alc_tsk, TCP_SYN_RECV);
+                tcp_send_control_packet(alc_tsk, TCP_SYN | TCP_ACK);
+                break;
+            } else {
                 fprintf(stdout, "Recv SYN when state=%d\n", tsk->state);
                 break;
             }
-
-            // XXX:
-            // the process of recv a new SYN should be
-            // checked carefully, especially when you
-            // alloc new sock and assign values to certain areas
-            struct tcp_sock *alc_tsk = alloc_tcp_sock();
-            memcpy((char *) alc_tsk, (char *) tsk,
-                   sizeof(struct tcp_sock));
-            alc_tsk->parent = tsk;
-            alc_tsk->sk_sip = cb->daddr;
-            alc_tsk->sk_sport = cb->dport;
-            alc_tsk->sk_dip = cb->saddr;
-            alc_tsk->sk_dport = cb->sport;
-            alc_tsk->iss = tcp_new_iss();
-            alc_tsk->snd_nxt = alc_tsk->iss;
-            struct sock_addr *pSockAddr =
-                    (struct sock_addr *) malloc(
-                            sizeof(struct sock_addr));
-            pSockAddr->ip = htonl(cb->daddr);
-            pSockAddr->port = htons(cb->dport);
-            tcp_sock_bind(alc_tsk, pSockAddr);
-            tcp_hash(alc_tsk);
-            // finish the assignment and add it to listen queue
-            list_add_tail(&alc_tsk->list, &tsk->listen_queue);
-
-            tcp_set_state(alc_tsk, TCP_SYN_RECV);
-            tcp_send_control_packet(alc_tsk, TCP_SYN | TCP_ACK);
-            break;
         case (TCP_ACK | TCP_SYN):
-            if (tsk->state == TCP_SYN_SENT) wake_up(tsk->wait_connect);
+            if (tsk->state == TCP_SYN_SENT)
+                wake_up(tsk->wait_connect);
             break;
         case TCP_ACK:
             switch (tsk->state) {
@@ -121,24 +123,30 @@ void tcp_process(
             }
             break;
         case (TCP_ACK | TCP_PSH):
-            pthread_mutex_lock(&tsk->rcv_buf->rbuf_lock);
-            write_ring_buffer(tsk->rcv_buf, cb->payload, cb->pl_len);
-            pthread_mutex_unlock(&tsk->rcv_buf->rbuf_lock);
-            if (tsk->wait_recv->sleep) wake_up(tsk->wait_recv);
-            tcp_send_control_packet(tsk, TCP_ACK);
-            if (tsk->wait_send->sleep) wake_up(tsk->wait_send);
+            if (tsk->state == TCP_ESTABLISHED) {
+                pthread_mutex_lock(&tsk->rcv_buf->rbuf_lock);
+                write_ring_buffer(tsk->rcv_buf, cb->payload, cb->pl_len);
+                pthread_mutex_unlock(&tsk->rcv_buf->rbuf_lock);
+                if (tsk->wait_recv->sleep) wake_up(tsk->wait_recv);
+                tcp_send_control_packet(tsk, TCP_ACK);
+                if (tsk->wait_send->sleep) wake_up(tsk->wait_send);
+            } else {
+                fprintf(stdout, "  [flag=ACK|PSH] No rule for %d\n",
+                        tsk->state);
+            }
             break;
         case (TCP_ACK | TCP_FIN):
-            if (tsk->state != TCP_FIN_WAIT_1) {
+            if (tsk->state == TCP_FIN_WAIT_1) {
+                tcp_set_state(tsk, TCP_TIME_WAIT);
+                tcp_send_control_packet(tsk, TCP_ACK);
+                tcp_set_timewait_timer(tsk);
+                break;
+            } else {
                 fprintf(stdout,
                         "  [flag=ACK|FIN] No rule for %d\n",
                         tsk->state);
                 break;
             }
-            tcp_set_state(tsk, TCP_TIME_WAIT);
-            tcp_send_control_packet(tsk, TCP_ACK);
-            tcp_set_timewait_timer(tsk);
-            break;
         case TCP_FIN:
             switch (tsk->state) {
                 case TCP_ESTABLISHED:

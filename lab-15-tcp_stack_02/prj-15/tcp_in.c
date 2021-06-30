@@ -60,6 +60,36 @@ void tcp_process(
     tsk->snd_una = cb->ack;
     tsk->rcv_nxt = cb->seq_end;
 
+    // change STM's transfer reference
+    switch(tsk->state){
+        case TCP_CLOSED:
+            break;
+        case TCP_LISTEN:
+            break;
+        case TCP_SYN_RECV:
+            break;
+        case TCP_SYN_SENT:
+            break;
+        case TCP_ESTABLISHED:
+            break;
+        case TCP_CLOSE_WAIT:
+            break;
+        case TCP_LAST_ACK:
+            break;
+        case TCP_FIN_WAIT_1:
+            break;
+        case TCP_FIN_WAIT_2:
+            break;
+        case TCP_CLOSING:
+            break;
+        case TCP_TIME_WAIT:
+            break;
+        default:
+            break;
+    }
+
+
+/*
     switch (cb->flags) {
         case TCP_SYN:
             if (tsk->state == TCP_LISTEN) {
@@ -168,4 +198,5 @@ void tcp_process(
         default:
             fprintf(stdout, "No rule for flag %d\n", cb->flags);
     }
+*/
 }

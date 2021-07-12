@@ -10,19 +10,23 @@ from mininet.net import Mininet
 from mininet.cli import CLI
 from mininet.link import TCLink
 
-script_deps = [ 'ethtool', 'arptables', 'iptables' ]
+script_deps = ['ethtool', 'arptables', 'iptables']
+
 
 def check_scripts():
     dir = os.path.abspath(os.path.dirname(sys.argv[0]))
 
     script_dir = dir + '/scripts'
     if not os.path.exists(script_dir) or os.path.isfile(script_dir):
-        print 'dir "%s" does not exist.' % (script_dir)
+        print
+        'dir "%s" does not exist.' % (script_dir)
         sys.exit(1)
-    
+
     for fname in glob.glob(script_dir + '/*.sh'):
         if not os.access(fname, os.X_OK):
-            print '%s should be set executable by using `chmod +x $script_name`' % (fname)
+            print
+            '%s should be set executable by using `chmod +x $script_name`' % (
+                fname)
             sys.exit(2)
 
     for program in script_deps:
@@ -33,8 +37,11 @@ def check_scripts():
                 found = True
                 break
         if not found:
-            print '`%s` is required but missing, which could be installed via `apt` or `aptitude`' % (program)
+            print
+            '`%s` is required but missing, which could be installed via `apt` or `aptitude`' % (
+                program)
             sys.exit(3)
+
 
 class TCPTopo(Topo):
     def build(self):
@@ -46,11 +53,12 @@ class TCPTopo(Topo):
         self.addLink(h1, s1, delay='10ms', loss=2)
         self.addLink(s1, h2)
 
+
 if __name__ == '__main__':
     check_scripts()
 
     topo = TCPTopo()
-    net = Mininet(topo = topo, switch = OVSBridge, controller = None, link = TCLink) 
+    net = Mininet(topo=topo, switch=OVSBridge, controller=None, link=TCLink)
 
     h1, h2, s1 = net.get('h1', 'h2', 's1')
     h1.cmd('ifconfig h1-eth0 10.0.0.1/24')

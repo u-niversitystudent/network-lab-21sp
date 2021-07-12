@@ -56,12 +56,21 @@ struct tcp_sock *alloc_tcp_sock() {
     init_list_head(&tsk->listen_queue);
     init_list_head(&tsk->accept_queue);
 
+    /* added in tcp-stack-3 */
+    init_list_head(&tsk->send_buf);
+    tsk->send_buf_count = 0;
+    init_list_head(&tsk->rcv_ofo_buf);
+    pthread_mutex_init(&tsk->send_lock, NULL);
+    pthread_mutex_init(&tsk->count_lock, NULL);
     tsk->rcv_buf = alloc_ring_buffer(tsk->rcv_wnd);
 
     tsk->wait_connect = alloc_wait_struct();
     tsk->wait_accept = alloc_wait_struct();
     tsk->wait_recv = alloc_wait_struct();
     tsk->wait_send = alloc_wait_struct();
+
+    /* added in tcp-stack-3 */
+    tcp_set_retrans_timer(tsk);
 
     pthread_mutex_init(&tsk->rcv_buf->rbuf_lock, 0);
 
@@ -84,6 +93,13 @@ void free_tcp_sock(struct tcp_sock *tsk) {
     free_wait_struct(tsk->wait_recv);
     free_wait_struct(tsk->wait_send);
     free_ring_buffer(tsk->rcv_buf);
+
+    // OK: free allocated things
+    pthread_mutex_destroy(&tsk->send_lock);
+    pthread_mutex_destroy(&tsk->count_lock);
+    free_ring_buffer(tsk->rcv_buf);
+
+    tcp_unset_retrans_timer(tsk);
     free(tsk);
 }
 
@@ -394,7 +410,73 @@ int tcp_sock_write(struct tcp_sock *tsk, char *buf, int len) {
                buf + sent, data_len);
         tcp_send_packet(tsk, packet, pkt_len);
         sent += data_len;
-        sleep_on(tsk->wait_send);
+        pthread_mutex_lock(&tsk->count_lock);
+        while (tsk->send_buf_count >= 5) {
+            pthread_mutex_unlock(&tsk->count_lock);
+            sleep_on(tsk->wait_send);
+            pthread_mutex_lock(&tsk->count_lock);
+        }
+        pthread_mutex_unlock(&tsk->count_lock);
     }
     return sent;
+}
+
+/* tcp-stack-3: send buffer maintaining for packet loss*/
+
+void PushSendBuf(struct tcp_sock *tsk, char *packet, int size) {
+    char *temp = (char *) malloc(sizeof(char) * size);
+    memcpy(temp, packet, sizeof(char) * size);
+    struct send_buffer *buf =
+            (struct send_buffer *) malloc(sizeof(struct send_buffer));
+    //printf("%p--push!!!%p\n", &(tsk->send_buf), buf);
+    buf->packet = temp;
+    buf->len = size;
+    buf->seq_end = tsk->snd_nxt;
+    buf->times = 1;
+    buf->timeout = TCP_RETRANS_INT;
+    pthread_mutex_lock(&tsk->send_lock);
+    list_add_tail(&buf->list, &tsk->send_buf);
+    pthread_mutex_unlock(&tsk->send_lock);
+    pthread_mutex_lock(&tsk->count_lock);
+    tsk->send_buf_count++;
+    pthread_mutex_unlock(&tsk->count_lock);
+}
+
+void PopSendBuf(struct tcp_sock *tsk, struct send_buffer *buf) {
+    //printf("%p--pop!!!%p\n", &(tsk->send_buf), buf);
+    pthread_mutex_lock(&tsk->send_lock);
+    list_delete_entry(&buf->list);
+    if (buf->packet) free(buf->packet);
+    else fprintf(stdout, "[Hint] empty packet!!!");
+    free(buf);
+    pthread_mutex_unlock(&tsk->send_lock);
+    pthread_mutex_lock(&tsk->count_lock);
+    tsk->send_buf_count--;
+    pthread_mutex_unlock(&tsk->count_lock);
+}
+
+void WriteOfoBuf(struct tcp_sock *tsk, struct tcp_cb *cb) {
+    struct ofo_buffer *buf =
+            (struct ofo_buffer *) malloc(sizeof(struct ofo_buffer));
+    buf->tsk = tsk;
+    buf->seq = cb->seq;
+    buf->seq_end = cb->seq_end;
+    buf->pl_len = cb->pl_len;
+    buf->payload = (char *) malloc(buf->pl_len);
+    memcpy(buf->payload, cb->payload, buf->pl_len);
+    //printf("%s\n", cb->payload);
+    struct ofo_buffer head_ext;
+    head_ext.list = tsk->rcv_ofo_buf;
+    int insert = 0;
+    struct ofo_buffer *pos, *last = &head_ext;
+    list_for_each_entry(pos, &tsk->rcv_ofo_buf, list) {
+        if (cb->seq > pos->seq) {
+            last = pos;
+            continue;
+        } else if (cb->seq == pos->seq) return;
+        list_insert(&buf->list, &last->list, &pos->list);
+        insert = 1;
+        break;
+    }
+    if (!insert) list_add_tail(&buf->list, &tsk->rcv_ofo_buf);
 }

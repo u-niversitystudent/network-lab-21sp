@@ -5,6 +5,24 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct send_buffer {
+    struct list_head list;
+    char *packet;
+    int len;
+    u32 seq_end;
+    int times;
+    int timeout;
+};
+
+struct ofo_buffer {
+    struct list_head list;
+    struct tcp_sock *tsk;
+    u32 seq;
+    u32 seq_end;
+    char *payload;
+    int pl_len;
+};
+
 struct ring_buffer {
     pthread_mutex_t rbuf_lock;
     int size;

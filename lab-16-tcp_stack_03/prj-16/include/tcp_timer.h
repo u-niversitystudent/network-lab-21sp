@@ -5,6 +5,8 @@
 
 #include <stddef.h>
 
+extern int timer_thread_init;
+
 struct tcp_timer {
     int type;    // time-wait: 0  retrans: 1
     int timeout; // in micro second
@@ -21,7 +23,7 @@ struct tcp_sock;
 #define TCP_TIMER_SCAN_INTERVAL 100000
 #define TCP_MSL            1000000
 #define TCP_TIMEWAIT_TIMEOUT    (2 * TCP_MSL)
-#define TCP_RETRANS_INTERVAL_INITIAL 200000
+#define TCP_RETRANS_INT 200000 // TCP_RETRANS_INTERVAL_INITIAL
 
 // the thread that scans timer_list periodically
 void *tcp_timer_thread(void *arg);

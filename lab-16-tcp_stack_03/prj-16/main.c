@@ -6,12 +6,15 @@
 #include "rtable.h"
 #include "tcp_sock.h"
 #include "tcp_apps.h"
+#include "tcp_timer.h"
 
 #include "log.h"
 
 #include <stdlib.h>
 #include <unistd.h>
 #include <libgen.h>
+
+int timer_thread_init = 0;
 
 void handle_packet(iface_info_t *iface, char *packet, int len) {
     struct ether_header *eh = (struct ether_header *) packet;
@@ -122,6 +125,7 @@ int main(int argc, char **argv) {
 
     init_tcp_stack();
 
+    while (!timer_thread_init);
     run_application((const char *) basename(argv[0]), argv + 1, argc - 1);
 
     ustack_run();

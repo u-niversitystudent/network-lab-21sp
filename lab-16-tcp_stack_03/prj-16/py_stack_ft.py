@@ -7,6 +7,7 @@ from time import sleep
 
 data = string.digits + string.lowercase + string.uppercase
 
+
 def server(port):
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -15,7 +16,8 @@ def server(port):
     s.listen(3)
 
     cs, addr = s.accept()
-    print addr
+    print
+    addr
 
     filename = 'server-output.dat'
     f = open(filename, 'a')
@@ -25,7 +27,7 @@ def server(port):
         # print(data)
         if data:
             f.write(data)
-            f.flush() # Force Update File Write buffer
+            f.flush()  # Force Update File Write buffer
         else:
             break
 
@@ -50,6 +52,7 @@ def client(ip, port):
 
     f.close()
     s.close()
+
 
 if __name__ == '__main__':
     if sys.argv[1] == 'server':

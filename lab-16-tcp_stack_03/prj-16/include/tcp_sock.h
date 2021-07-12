@@ -93,8 +93,16 @@ struct tcp_sock {
     struct ring_buffer *rcv_buf;
     // used to pend unpacked packets
     struct list_head send_buf;
+
+    /* added in tcp-stack-3: */
+    // the number of send_buf in sock
+    int send_buf_count;
     // used to pend out-of-order packets
     struct list_head rcv_ofo_buf;
+    // the lock for send_buf
+    pthread_mutex_t send_lock;
+    // the lock for send_buf_count
+    pthread_mutex_t count_lock;
 
     // tcp state, see enum tcp_state in tcp.h
     int state;
@@ -176,5 +184,13 @@ void tcp_sock_close(struct tcp_sock *tsk);
 int tcp_sock_read(struct tcp_sock *tsk, char *buf, int len);
 
 int tcp_sock_write(struct tcp_sock *tsk, char *buf, int len);
+
+/* tcp-stack-3: send buffer maintaining for packet loss*/
+
+void PushSendBuf(struct tcp_sock *tsk, char *packet, int size);
+
+void PopSendBuf(struct tcp_sock *tsk, struct send_buffer *buf);
+
+void WriteOfoBuf(struct tcp_sock *tsk, struct tcp_cb *cb);
 
 #endif

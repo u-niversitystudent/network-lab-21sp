@@ -22,9 +22,9 @@ static inline int tcp_hash_function(
         u32 saddr, u32 daddr, u16 sport, u16 dport) {
     int result =
             hash8((char *) &saddr, 4)
-            ^hash8((char *) &daddr, 4) \
-            ^hash8((char *) &sport, 2) \
-            ^hash8((char *) &dport, 2);
+            ^ hash8((char *) &daddr, 4) \
+ ^ hash8((char *) &sport, 2) \
+ ^ hash8((char *) &dport, 2);
 
     return result & TCP_HASH_MASK;
 }

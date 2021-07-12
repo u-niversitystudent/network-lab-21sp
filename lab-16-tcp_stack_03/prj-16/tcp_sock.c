@@ -428,7 +428,7 @@ void PushSendBuf(struct tcp_sock *tsk, char *packet, int size) {
     memcpy(temp, packet, sizeof(char) * size);
     struct send_buffer *buf =
             (struct send_buffer *) malloc(sizeof(struct send_buffer));
-    //printf("%p--push!!!%p\n", &(tsk->send_buf), buf);
+    printf("%p--push!!!%p\n", &(tsk->send_buf), buf);
     buf->packet = temp;
     buf->len = size;
     buf->seq_end = tsk->snd_nxt;
@@ -443,7 +443,7 @@ void PushSendBuf(struct tcp_sock *tsk, char *packet, int size) {
 }
 
 void PopSendBuf(struct tcp_sock *tsk, struct send_buffer *buf) {
-    //printf("%p--pop!!!%p\n", &(tsk->send_buf), buf);
+    printf("%p--pop!!!%p\n", &(tsk->send_buf), buf);
     pthread_mutex_lock(&tsk->send_lock);
     list_delete_entry(&buf->list);
     if (buf->packet) free(buf->packet);

@@ -100,13 +100,13 @@ void tcp_process(
         tsk->rcv_nxt = cb->seq_end;
     }
 
-    //printf("%x    ;    %d\n", cb->flags, cb->ack);
+    printf("%x    ;    %d\n", cb->flags, cb->ack);
 
     if (cb->flags & TCP_ACK) {
         struct send_buffer *pos_buf, *q_buf;
         list_for_each_entry_safe(pos_buf, q_buf,
                                  &tsk->send_buf, list) {
-            //printf("%d\n", pos_buf->seq_end);
+            printf("%d\n", pos_buf->seq_end);
             if (pos_buf->seq_end > cb->ack) break;
             else {
                 tsk->snd_una = pos_buf->seq_end;
@@ -144,12 +144,13 @@ void tcp_process(
                                 sizeof(struct sock_addr));
                 pSockAddr->ip = htonl(cb->daddr);
                 pSockAddr->port = htons(cb->dport);
-                tcp_sock_bind(alc_tsk, pSockAddr);
-                tcp_hash(alc_tsk);
+                // tcp_sock_bind(alc_tsk, pSockAddr);
+                // tcp_hash(alc_tsk);
                 // finish the assignment and add it to listen queue
-                list_add_tail(&alc_tsk->list, &tsk->listen_queue);
+                // list_add_tail(&alc_tsk->list, &tsk->listen_queue);
 
                 tcp_set_state(alc_tsk, TCP_SYN_RECV);
+                tcp_hash(alc_tsk);
                 tcp_send_control_packet(alc_tsk,
                                         TCP_SYN | TCP_ACK);
             }

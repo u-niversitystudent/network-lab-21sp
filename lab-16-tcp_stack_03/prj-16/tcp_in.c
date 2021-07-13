@@ -48,7 +48,9 @@ static inline int is_tcp_seq_valid(struct tcp_sock *tsk,
 }
 
 
-static int tcp_recv_psh_ack_tool(struct tcp_sock *tsk, struct tcp_cb *cb) {
+static int
+tcp_recv_psh_ack_tool(struct tcp_sock *tsk, struct tcp_cb *cb) {
+    //printf("Enter PSH & ACK HANDLER!!!!!!\n");
     pthread_mutex_lock(&tsk->rcv_buf->rbuf_lock);
     u32 seq_end = tsk->rcv_nxt;
     if (seq_end > cb->seq) {
@@ -96,7 +98,7 @@ void tcp_process(
         return;
     }
 
-    if (~((cb->flags) & TCP_PSH)) {
+    if ((cb->flags & TCP_PSH) == 0) {
         tsk->rcv_nxt = cb->seq_end;
     }
 
@@ -162,41 +164,6 @@ void tcp_process(
                     // OK: write data
                     // if (tcp_recv_psh_ack_tool(tsk, cb)) break;
                     tcp_recv_psh_ack_tool(tsk, cb);
-                    /*
-                     pthread_mutex_lock(&tsk->rcv_buf->rbuf_lock);
-                    u32 seq_end = tsk->rcv_nxt;
-                    if (seq_end == cb->seq) {
-                        write_ring_buffer(tsk->rcv_buf,
-                                          cb->payload, cb->pl_len);
-                        seq_end = cb->seq_end;
-                        struct ofo_buffer *pos_ofo, *q_ofo;
-                        list_for_each_entry_safe(pos_ofo, q_ofo,
-                                                 &tsk->rcv_ofo_buf,
-                                                 list) {
-                            if (seq_end < pos_ofo->seq) break;
-
-                            seq_end = pos_ofo->seq_end;
-                            write_ring_buffer(pos_ofo->tsk->rcv_buf,
-                                              pos_ofo->payload,
-                                              pos_ofo->pl_len);
-                            list_delete_entry(&pos_ofo->list);
-                            free(pos_ofo->payload);
-                            free(pos_ofo);
-                        }
-                        tsk->rcv_nxt = seq_end;
-                    } else if (seq_end < cb->seq) {
-                        WriteOfoBuf(tsk, cb);
-                    } else {
-                        pthread_mutex_unlock(&tsk->rcv_buf->rbuf_lock);
-                        tcp_send_control_packet(tsk, TCP_ACK);
-                        break;
-                    }
-                    pthread_mutex_unlock(&tsk->rcv_buf->rbuf_lock);
-
-                    if (tsk->wait_recv->sleep) wake_up(tsk->wait_recv);
-                    tcp_send_control_packet(tsk, TCP_ACK);
-                    if (tsk->wait_send->sleep) wake_up(tsk->wait_send);
-                     * */
                 } else {
                     tcp_sock_accept_enqueue(tsk);
                     wake_up(tsk->parent->wait_accept);
@@ -216,7 +183,8 @@ void tcp_process(
                 tcp_send_control_packet(tsk, TCP_ACK | TCP_FIN);
                 tcp_set_timewait_timer(tsk);
             } else if (cb->flags & TCP_ACK) {
-                if (cb->flags & TCP_PSH) { ;
+                if (cb->flags & TCP_PSH) {
+                    tcp_recv_psh_ack_tool(tsk, cb);
                 } else {
                     wake_up(tsk->wait_send);
                 }

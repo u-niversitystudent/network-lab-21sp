@@ -36,31 +36,34 @@ void tcp_scan_timer_list() {
                 list_for_each_entry(
                         pos_buf, &tsk->send_buf, list) {
                     pos_buf->timeout -= TCP_TIMER_SCAN_INTERVAL;
-                    if (!pos_buf->timeout) {
+                    if (!pos_buf->timeout && tsk->state != TCP_CLOSED) {
                         if (pos_buf->times++ == 3) {
                             fprintf(stdout, "[Hint] Packet Loss.\n");
                             // XXX:
                             // here you should use close, but if you do
                             // as told, the experiment would get hard
 
-                            // TODO: might have other things to be clear
-                            // tcp_sock_close(tsk);
-                            // ...
-
+                            /* finite retrans version */
+                            list_delete_entry(&pos_tt->list);
+                            if (!tsk->parent) tcp_unhash(tsk);
+                            wait_exit(tsk->wait_recv);
+                            wait_exit(tsk->wait_send);
+                            wait_exit(tsk->wait_accept);
+                            wait_exit(tsk->wait_connect);
+                            tcp_set_state(tsk, TCP_CLOSED);
+                            tcp_send_control_packet(tsk, TCP_RST);
 
                             /* infinite retrans version */
-                            pos_buf->times = 1;
-                            pos_buf->timeout = TCP_RETRANS_INT;
+                            // pos_buf->times = 1;
+                            // pos_buf->timeout = TCP_RETRANS_INT;
 
                         } else {
                             char *tmp = (char *) malloc(
                                     pos_buf->len * sizeof(char));
                             memcpy(tmp, pos_buf->packet, pos_buf->len);
                             ip_send_packet(tmp, pos_buf->len);
-                            if (pos_buf->times == 2)
-                                pos_buf->timeout = 2 * TCP_RETRANS_INT;
-                            else
-                                pos_buf->timeout = 4 * TCP_RETRANS_INT;
+                            pos_buf->timeout = TCP_RETRANS_INT
+                                               * (2 << pos_buf->times);
                         }
                     }
                 }

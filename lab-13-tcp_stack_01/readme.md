@@ -226,8 +226,8 @@ void tcp_set_timewait_timer(struct tcp_sock *tsk) {
 
 1. 删除计时器;
 2. 关闭相应 sock 的 TCP 连接;
-3. 如 sock 无 parent, 则将其从 bind_hash 中释放;
-4. 释放 sock.
+3. 如 sock 无 parent, 则将其从 bind_table 中释放;
+4. 将 sock 从其所属的 table (established table / listen table) 中释放.
 
 ```c
 void tcp_scan_timer_list() {

@@ -26,6 +26,18 @@ inline void tcp_set_state(struct tcp_sock *tsk, int state) {
     tsk->state = state;
 }
 
+struct tcp_sock* time_rec_sock;
+
+void *tcp_record_thread(){
+    int round = 1;
+    while (1) {
+        usleep(1000);
+        char line[100];
+        sprintf(line, "%d,%d\n", round++, time_rec_sock->cwnd);
+        fwrite(line, sizeof(char), strlen(line), record_file);
+    }
+}
+
 // init tcp hash table and tcp timer
 void init_tcp_stack() {
     for (int i = 0; i < TCP_HASH_SIZE; i++)
@@ -69,8 +81,21 @@ struct tcp_sock *alloc_tcp_sock() {
     tsk->wait_recv = alloc_wait_struct();
     tsk->wait_send = alloc_wait_struct();
 
+    tsk->cgt_state = OPEN;
+    tsk->send_buf_count = 0;
+    tsk->cwnd = 1;
+    tsk->cwnd_unit = 0;
+    tsk->ssthresh = TCP_DEFAULT_WINDOW / MTU_SIZE;
+
     /* added in tcp-stack-3 */
     tcp_set_retrans_timer(tsk);
+
+    record_file = fopen(record_name, "w+");
+    gettimeofday(&start, NULL);
+
+    time_rec_sock = tsk;
+    pthread_t recorder;
+    pthread_create(&recorder, NULL, tcp_record_thread, NULL);
 
     pthread_mutex_init(&tsk->rcv_buf->rbuf_lock, 0);
 
@@ -428,7 +453,6 @@ void PushSendBuf(struct tcp_sock *tsk, char *packet, int size) {
     memcpy(temp, packet, sizeof(char) * size);
     struct send_buffer *buf =
             (struct send_buffer *) malloc(sizeof(struct send_buffer));
-    printf("%p--push!!!%p\n", &(tsk->send_buf), buf);
     buf->packet = temp;
     buf->len = size;
     buf->seq_end = tsk->snd_nxt;
@@ -443,7 +467,6 @@ void PushSendBuf(struct tcp_sock *tsk, char *packet, int size) {
 }
 
 void PopSendBuf(struct tcp_sock *tsk, struct send_buffer *buf) {
-    printf("%p--pop!!!%p\n", &(tsk->send_buf), buf);
     pthread_mutex_lock(&tsk->send_lock);
     list_delete_entry(&buf->list);
     if (buf->packet) free(buf->packet);
@@ -464,7 +487,6 @@ void WriteOfoBuf(struct tcp_sock *tsk, struct tcp_cb *cb) {
     buf->pl_len = cb->pl_len;
     buf->payload = (char *) malloc(buf->pl_len);
     memcpy(buf->payload, cb->payload, buf->pl_len);
-    //printf("%s\n", cb->payload);
     struct ofo_buffer head_ext;
     head_ext.list = tsk->rcv_ofo_buf;
     int insert = 0;

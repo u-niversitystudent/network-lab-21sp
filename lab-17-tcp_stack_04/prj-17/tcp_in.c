@@ -6,6 +6,7 @@
 #include "ring_buffer.h"
 
 #include <stdlib.h>
+#include <sys/time.h>
 
 // update the snd_wnd of tcp_sock
 //
@@ -14,9 +15,23 @@
 static inline void tcp_update_window(
         struct tcp_sock *tsk, struct tcp_cb *cb) {
     u16 old_snd_wnd = tsk->snd_wnd;
-    tsk->snd_wnd = cb->rwnd;
+    tsk->adv_wnd = cb->rwnd;
+    tsk->snd_wnd = min(tsk->adv_wnd, tsk->cwnd * (MTU_SIZE));
     if (old_snd_wnd == 0)
         wake_up(tsk->wait_send);
+}
+
+static inline void tcp_cwnd_inc(struct tcp_sock *tsk) {
+    if (tsk->cgt_state != OPEN) return;
+    if (tsk->cwnd < tsk->ssthresh) {
+        tsk->cwnd += 1;
+    } else {
+        tsk->cwnd_unit += 1;
+        if (tsk->cwnd_unit >= tsk->cwnd) {
+            tsk->cwnd_unit = 0;
+            tsk->cwnd += 1;
+        }
+    }
 }
 
 // update the snd_wnd safely: cb->ack should
@@ -50,7 +65,6 @@ static inline int is_tcp_seq_valid(struct tcp_sock *tsk,
 
 static int
 tcp_recv_psh_ack_tool(struct tcp_sock *tsk, struct tcp_cb *cb) {
-    //printf("Enter PSH & ACK HANDLER!!!!!!\n");
     pthread_mutex_lock(&tsk->rcv_buf->rbuf_lock);
     u32 seq_end = tsk->rcv_nxt;
     if (seq_end > cb->seq) {
@@ -102,13 +116,79 @@ void tcp_process(
         tsk->rcv_nxt = cb->seq_end;
     }
 
-    printf("%x    ;    %d\n", cb->flags, cb->ack);
+    if ((cb->flags) & TCP_ACK) {
+        if (cb->ack == tsk->snd_una) {
+            tsk->rep_ack++;
+            switch (tsk->cgt_state) {
+                case OPEN:
+                    if (tsk->rep_ack > 2) {
+                        tsk->cgt_state = RCVR;
+                        tsk->ssthresh = (tsk->cwnd + 1) / 2;
+                        tsk->recovery_point = tsk->snd_nxt;
+                        struct send_buffer *buf = NULL;
+                        list_for_each_entry(
+                                buf, &tsk->send_buf, list)break;
+                        if (!list_empty(&tsk->send_buf)) {
+                            char *temp = (char *) malloc(
+                                    buf->len * sizeof(char));
+                            memcpy(temp, buf->packet, buf->len);
+                            ip_send_packet(temp, buf->len);
+                        }
+                    } else break;
+                case RCVR:
+                    if (tsk->rep_ack > 1) {
+                        tsk->rep_ack -= 2;
+                        tsk->cwnd -= 1;
+                        if (tsk->cwnd < 1) tsk->cwnd = 1;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            tsk->rep_ack = 0;
+            struct send_buffer *buf, *q;
+            list_for_each_entry_safe(buf, q,
+                                     &tsk->send_buf, list) {
+                if (buf->seq_end > cb->ack) break;
+                else {
+                    tsk->snd_una = buf->seq_end;
+                    PopSendBuf(tsk, buf);
+                    tcp_cwnd_inc(tsk);
+                }
+            }
+            switch (tsk->cgt_state) {
+                case RCVR:
+                    if (less_or_equal_32b(
+                            tsk->recovery_point, cb->ack)) {
+                        tsk->cgt_state = OPEN;
+                    } else {
+                        char *temp =
+                                (char *) malloc(
+                                        buf->len * sizeof(char));
+                        memcpy(temp, buf->packet, buf->len);
+                        ip_send_packet(temp, buf->len);
+                    }
+                    break;
+                case LOSS:
+                    if (less_or_equal_32b(
+                            tsk->recovery_point, cb->ack)) {
+                        tsk->cgt_state = OPEN;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        tcp_update_window_safe(tsk, cb);
+    }
+
 
     if (cb->flags & TCP_ACK) {
         struct send_buffer *pos_buf, *q_buf;
         list_for_each_entry_safe(pos_buf, q_buf,
                                  &tsk->send_buf, list) {
-            printf("%d\n", pos_buf->seq_end);
+
             if (pos_buf->seq_end > cb->ack) break;
             else {
                 tsk->snd_una = pos_buf->seq_end;
@@ -160,6 +240,10 @@ void tcp_process(
         case TCP_SYN_RECV:
             if (cb->flags & TCP_ACK) {
                 if (cb->flags & TCP_PSH) {
+                    if (tsk->cgt_state == OPEN &&
+                        tsk->wait_send->sleep) {
+                        wake_up(tsk->wait_send);
+                    }
                     tcp_set_state(tsk, TCP_ESTABLISHED);
                     // OK: write data
                     // if (tcp_recv_psh_ack_tool(tsk, cb)) break;
@@ -183,7 +267,13 @@ void tcp_process(
                 tcp_send_control_packet(tsk, TCP_ACK | TCP_FIN);
                 tcp_set_timewait_timer(tsk);
             } else if (cb->flags & TCP_ACK) {
+                if (tsk->cgt_state == OPEN)
+                    wake_up(tsk->wait_send);
                 if (cb->flags & TCP_PSH) {
+                    if (tsk->cgt_state == OPEN &&
+                        tsk->wait_send->sleep) {
+                        wake_up(tsk->wait_send);
+                    }
                     tcp_recv_psh_ack_tool(tsk, cb);
                 } else {
                     wake_up(tsk->wait_send);

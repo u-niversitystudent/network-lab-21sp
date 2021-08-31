@@ -10,12 +10,19 @@
 #include "synch_wait.h"
 
 #include <pthread.h>
+#include <stdio.h>
+#include <sys/time.h>
 
 #define PORT_MIN    12345
 #define PORT_MAX    23456
 #define TCP_ALL_BASE_SIZE ETHER_HDR_SIZE \
             + IP_BASE_HDR_SIZE + TCP_BASE_HDR_SIZE
 #define MTU_SIZE ETH_FRAME_LEN - TCP_ALL_BASE_SIZE
+
+extern int timer_thread_init;
+FILE *record_file;
+struct timeval start;
+char record_name[10];
 
 struct sock_addr {
     u32 ip;
@@ -133,6 +140,18 @@ struct tcp_sock {
     // congestion window
     u32 cwnd;
 
+    // cwnd control state
+    int cgt_state;
+#define OPEN 0x01
+#define RCVR 0x02
+#define LOSS 0x03
+
+    // repeated ack
+    int rep_ack;
+
+    // cwnd sub counter
+    int cwnd_unit;
+
     // slow start threshold
     u32 ssthresh;
 };
@@ -192,5 +211,7 @@ void PushSendBuf(struct tcp_sock *tsk, char *packet, int size);
 void PopSendBuf(struct tcp_sock *tsk, struct send_buffer *buf);
 
 void WriteOfoBuf(struct tcp_sock *tsk, struct tcp_cb *cb);
+
+/* tcp-stack-4: newReno */
 
 #endif

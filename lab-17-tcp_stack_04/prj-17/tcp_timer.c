@@ -37,6 +37,12 @@ void tcp_scan_timer_list() {
                         pos_buf, &tsk->send_buf, list) {
                     pos_buf->timeout -= TCP_TIMER_SCAN_INTERVAL;
                     if (!pos_buf->timeout && tsk->state != TCP_CLOSED) {
+                        if (tsk->cgt_state != LOSS)
+                            tsk->recovery_point = tsk->snd_nxt;
+                        tsk->cgt_state = LOSS;
+                        tsk->ssthresh = (tsk->cwnd + 1) / 2;
+                        tsk->cwnd = 1;
+                        tsk->snd_wnd = MTU_SIZE;
                         if (pos_buf->times++ == 3) {
                             fprintf(stdout, "[Hint] Packet Loss.\n");
                             // XXX:

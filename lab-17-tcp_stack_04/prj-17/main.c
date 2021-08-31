@@ -116,6 +116,8 @@ int main(int argc, char **argv) {
         usage_and_exit(argv[0]);
     }
 
+    strcpy(record_name, "myLog.csv");
+
     init_ustack();
 
     arpcache_init();

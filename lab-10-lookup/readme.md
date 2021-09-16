@@ -140,9 +140,9 @@ void read_all_data(FILE * fptr, char *path, u32 *ip, u32 *mask,u32 *port);
 
 我选择的算法是论文 "A Tree-Based Packet Routing Table for Berkeley UNIX" 中实现的压缩前缀树算法, 著名的 Linux 发行版 FreeBSD 使用这一算法作为其路由查找算法.
 
-下图是从论文中摘录的一张图, 它说明了树的结构:
+<!-- 下图是从论文中摘录的一张图, 它说明了树的结构:
 
-![routing_example](readme.assets/routing_example.png)
+![routing_example](readme.assets/routing_example.png) -->
 
 这种 Trie 涉及两种结点: 中间结点, 叶子结点. 中间结点存储准备匹配的 bit 是第几位 (0~31), 叶子结点存储一对 port-mask.
 
